@@ -1,0 +1,64 @@
+{
+    "name": "kigkonsult/phpvcardmgr",
+    "type": "library",
+    "description": "The PHP class package managing Vcard/Xcard/Jcard information",
+    "keywords": [
+        "rfc6350",
+        "rfc6351",
+        "rfc7095",
+        "rfc2426",
+        "vcard",
+        "vcard4",
+        "vcard3",
+        "xcard",
+        "xml",
+        "jcard",
+        "json",
+        "parse",
+        "format",
+        "write"
+    ],
+    "license": "LGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Kjell-Inge Gustafsson",
+            "email": "ical@kigkonsult.se"
+        }
+    ],
+    "funding": [
+        {
+            "type": "other",
+            "url": "https://paypal.me/kigkonsult"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/iCalcreator/phpvcardmgr/issues"
+    },
+    "autoload": {
+        "files": ["autoload.php"],
+        "psr-4": { "Kigkonsult\\PhpVcardMgr\\": ["src/"] }
+    },
+    "require": {
+        "php": ">=7.1",
+        "ext-ctype": "*",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "ext-xmlreader": "*",
+        "ext-xmlwriter": "*"
+    },
+    "require-dev": {
+        "ext-iconv": "*",
+        "ext-xdebug": "*",
+        "fakerphp/faker": "dev-main",
+        "kigkonsult/fakerlocreltypes": "dev-main",
+        "phpcompatibility/php-compatibility": ">=9.3.5",
+        "phpstan/phpstan": ">=0.9.3",
+        "phpunit/phpunit": ">=6.5.13",
+        "squizlabs/php_codesniffer": ">=3.5.5"
+    },
+    "scripts": {
+        "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility",
+        "post-update-cmd" : "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility"
+    }
+}
