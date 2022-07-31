@@ -32,7 +32,7 @@ use Kigkonsult\PhpVcardMgr\Vcard;
 interface VcardParserInterface extends ParserInterface
 {
     /**
-     * @param string $source  json/vcard
+     * @param string $source  json/vcard/xcard
      * @return Vcard[] $vCards
      */
     public function parse( string $source ) : array;

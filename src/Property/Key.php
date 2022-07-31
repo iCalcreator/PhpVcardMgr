@@ -50,42 +50,6 @@ namespace Kigkonsult\PhpVcardMgr\Property;
 final class Key extends PropertyBase
 {
     /**
-     * Class constructor
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Key
-     */
-    public static function factory( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Key
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string

@@ -189,5 +189,7 @@ interface BaseInterface
     public const OFFSETfmt      = 'O';
     public const GMTfmt         = 'GMT';
     public const UTCfmt         = 'UTC';
+    public const VERSION3       = '3.0';
+    public const VERSION4       = '4.0';
     public const Zfmt           = 'Z';
 }

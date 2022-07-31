@@ -30,6 +30,7 @@ namespace Kigkonsult\PhpVcardMgr;
 use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Property\Note;
 use Kigkonsult\PhpVcardMgr\Property\Prodid;
+use Kigkonsult\PhpVcardMgr\Property\Role;
 use Kigkonsult\PhpVcardMgr\Property\Uid;
 use Kigkonsult\PhpVcardMgr\Property\Version;
 use Kigkonsult\PhpVcardMgr\Property\Xprop;
@@ -59,6 +60,7 @@ class VcardTest extends TestCase implements BaseInterface
             '4.0',
             $propValue,
             'Error #3, got ' . var_export( $propValue, true )
+            . PHP_EOL . var_export( $vcard, true ) // test ###
         );
 
         $vcard->addProperty( Version::factory());
@@ -135,7 +137,7 @@ class VcardTest extends TestCase implements BaseInterface
                 Note::factory( 'Note 3', [ self::PREF => 3 ] ),
                 Note::factory( 'Note 6' ),
                 Note::factory( 'Note 5' ),
-                Xprop::factory( 'X-prop1', 'X-prop 1' )
+                Xprop::factoryX( 'X-prop1', 'X-prop 1' )
             ]
         );
         $this->assertSame(
@@ -157,7 +159,7 @@ class VcardTest extends TestCase implements BaseInterface
         );
 
 
-        $vcard->addProperty( Xprop::factory( 'X-prop1', 'X-prop 1' )); // i.e. replace
+        $vcard->addProperty( Xprop::factoryX( 'X-prop1', 'X-prop 1' )); // i.e. replace
         $this->assertSame(
             8,
             $vcard->count(),
@@ -239,8 +241,8 @@ class VcardTest extends TestCase implements BaseInterface
         );
 
         $vcard->addProperty( Note::factory( 'Note X', [ self::TYPE => self::WORK ] ));
-        $vcard->addProperty( Xprop::factory( 'X-2', 'X-2', [ self::TYPE => 'wor, work2' ]  ));
-        $vcard->addProperty( Xprop::factory( 'X-3', 'X-3', [ self::TYPE => self::WORK ] ));
+        $vcard->addProperty( Xprop::factoryX( 'X-2', 'X-2', [ self::TYPE => 'wor, work2' ]  ));
+        $vcard->addProperty( Xprop::factoryX( 'X-3', 'X-3', [ self::TYPE => self::WORK ] ));
 
         $this->assertSame(
             1,
@@ -307,5 +309,79 @@ class VcardTest extends TestCase implements BaseInterface
             $ok = true;
         }
         $this->assertTrue( $ok, 'error in ' . __METHOD__ );
+    }
+
+    /**
+     * @test
+     */
+    public function getTypedPropertyTest() : void
+    {
+        $vcard = Vcard::factory()
+            ->setProperties(
+                [
+                    Xprop::factoryX( 'X-prop1', self::VALUE . 1 ),
+                    Xprop::factoryX( 'X-prop2', self::VALUE . 2, [ self::TYPE => self::WORK ] ),
+                    Role::factory( self::VALUE . 3, [ self::TYPE => self::WORK ] ),
+                    Xprop::factoryX( 'X-prop4', self::VALUE . 4 ),
+                    Role::factory( self::VALUE . 5, [ self::TYPE => self::HOME ] ),
+                    Xprop::factoryX( 'X-prop6', self::VALUE . 6, [ self::TYPE => self::WORK ] ),
+                    Xprop::factoryX( 'X-prop7', self::VALUE . 7, [ self::TYPE => self::HOME ] ),
+                    Role::factory( self::VALUE . 8 ),
+                ]
+            );
+        $workXpropValues = $vcard->getProperties( null, true, self::WORK );
+        sort( $workXpropValues );
+        $this->assertSame(
+            [ self::VALUE . 2, self::VALUE . 3, self::VALUE . 6 ],
+            $workXpropValues
+        );
+        $workXpropValues = $vcard->getProperties( self::XPREFIX, true, self::WORK );
+        sort( $workXpropValues );
+        $this->assertSame(
+            [ self::VALUE . 2, self::VALUE . 6 ],
+            $workXpropValues
+        );
+        $workXpropValues = $vcard->getProperties( self::ROLE, true, self::HOME );
+        $this->assertSame(
+            [ self::VALUE . 5 ],
+            $workXpropValues
+        );
+        $workXpropValues = $vcard->getProperties( self::XPREFIX, true, self::HOME );
+        $this->assertSame(
+            [ self::VALUE . 7 ],
+            $workXpropValues
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function getGroupPropertyTest() : void
+    {
+        $vcard = Vcard::factory();
+        $vcard->setProperties(
+            [
+                Xprop::factoryX( 'X-prop1', self::VALUE . 1 ),
+                Xprop::factoryX( 'X-prop2', self::VALUE . 2, null, null, self::WORK ),
+                Xprop::factoryX( 'X-prop3', self::VALUE . 3, null, null, self::HOME ),
+                Role::factory( self::VALUE . 4 ),
+                Role::factory( self::VALUE . 5, null, null, self::WORK ),
+                Role::factory( self::VALUE . 6, null, null, self::HOME ),
+            ]
+        );
+        $this->assertSame(
+            [ self::WORK, self::HOME ],
+            $vcard->getGroups()
+        );
+        foreach( $vcard->getGroupProperties( self::WORK ) as $property ) {
+            $this->assertContains(
+                $property->getPropName(),
+                [ 'X-prop2', self::ROLE ]
+            );
+            $this->assertContains(
+                $property->getValue(),
+                [ self::VALUE . 2, self::VALUE . 5 ]
+            );
+        } // end foreach
     }
 }

@@ -47,11 +47,11 @@ foreach( $vCards as $vCard) {
     if( $vCard->hasProperty( PhpVcardMgr::N )) {
         // Exactly one instance per vCard MAY be present
         $property = $vCard->getProperty( PhpVcardMgr::N );
-        $name       = $property->isGroupSet()    // string
+        $name       = $property->isGroupSet()     // string
             ? $property->getGroupPropName()
             : $property->getPropName();
         $parameters = $property->getParameters(); // array
-        $valueType  = $property->getValueType(); // string
+        $valueType  = $property->getValueType();  // string
         // five-element array : surname/given/additional/prefix/suffix
         $value      = $property->getValue();
             ...
@@ -59,11 +59,11 @@ foreach( $vCards as $vCard) {
     if( $vCard->hasProperty( PhpVcardMgr::ADR )) {
          // One or more instances per vCard MAY be present
         foreach( $vCard->getProperty( PhpVcardMgr::ADR ) as $property ) {
-            $name       = $property->isGroupSet()    // string
+            $name       = $property->isGroupSet()     // string
                 ? $property->getGroupPropName()
                 : $property->getPropName();
             $parameters = $property->getParameters(); // array
-            $valueType  = $property->getValueType(); // string
+            $valueType  = $property->getValueType();  // string
             // seven-element array : pobox/ext/street/locality/region/code/country
             $value      = $property->getValue();
             ...

@@ -206,11 +206,11 @@ class StringUtil
      * takes care of '\r\n', '\r' and '\n' and mixed '\r\n'+'\r', '\r\n'+'\n'
      *
      * @param string $text
-     * @param null|bool $convEolSp12Sp0
+     * @param null|bool $convEolSp1ToSp0
      * @return string[]
      * @throws Exception
      */
-    public static function convEolChar( string $text, ? bool $convEolSp12Sp0 = true ) : array
+    public static function convEolChar( string $text, ? bool $convEolSp1ToSp0 = true ) : array
     {
         static $BASEDELIM  = null;
         static $BASEDELIMs = null;
@@ -229,7 +229,7 @@ class StringUtil
         $text = str_replace( $BASEDELIMs, $EMPTYROW, $text );
         /* fix line folding */
         $text = str_replace( $BASEDELIM, self::$CRLF, $text );
-        if( $convEolSp12Sp0 ) {
+        if( $convEolSp1ToSp0 ) {
             $text = str_replace( $CRLFexts, self::$SP0, $text );
         }
         /* split in component/property lines */
@@ -252,13 +252,12 @@ class StringUtil
     /**
      * Replace backslash+char by char
      *
-     * @param array $chars
      * @param string $string
      * @return string
      */
     public static function unEscapeComma( string $string ) : string
     {
         static $BSCOMMA = '\,';
-        return str_replace( $BSCOMMA, StringUtil::$COMMA, $string );
+        return str_replace( $BSCOMMA, self::$COMMA, $string );
     }
 }

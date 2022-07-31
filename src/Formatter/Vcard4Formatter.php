@@ -43,7 +43,8 @@ class Vcard4Formatter implements FormatterInterface
             foreach( $vCard->getProperties() as $property ) {
                 $propName = $property->getPropName();
                 switch( $propName ) {
-                    case self::CATEGORIES :
+                    case self::CATEGORIES :  // fall through
+                    case self::NICKNAME :
                         $propRows[] = self::processValueArrComma( $property );
                         break;
                     case self::ADR :          // fall through
@@ -74,7 +75,6 @@ class Vcard4Formatter implements FormatterInterface
                     case self::KIND :        // fall through
                     case self::LANG  :       // fall through
                     case self::LOGO :        // fall through
-                    case self::NICKNAME :    // fall through
                     case self::NOTE :        // fall through
                     case self::PHOTO :       // fall through
                     case self::PRODID :      // fall through

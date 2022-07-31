@@ -390,7 +390,7 @@ class DateTest extends TestCase implements BaseInterface
         $this->assertStringContainsString(
             $jCardValue,
             $jsonString,
-            __FUNCTION__ . ' case ' . $case . '#1, jcard ' . $jCardValue . ' NOT found'
+            __FUNCTION__ . ' case ' . $case . '#1, valueType ' . $valueType . ', jcard ' . $jCardValue . ' NOT found'
         );
 
         // parse jsonString into (vCards into) vCardString
@@ -516,10 +516,29 @@ class DateTest extends TestCase implements BaseInterface
      */
     public function convertVcard2JcardTimeTest() : void
     {
+        $time = '--22';
         $this->assertSame(
-            '--22',
-            DateUtil::convertVcard2JcardTime( '--22' ),
+            $time,
+            DateUtil::convertVcard2JcardTime( $time ),
             __FUNCTION__ . '#' . 1
+        );
+        $time = '9876543210';
+        $this->assertSame(
+            $time, // return as-is
+            DateUtil::convertVcard2JcardTime( $time ),
+            __FUNCTION__ . '#' . 2
+        );
+        $time = '9876ABC';
+        $this->assertSame(
+            $time, // return as-is
+            DateUtil::convertVcard2JcardTime( $time ),
+            __FUNCTION__ . '#' . 2
+        );
+        $time = '98ABC';
+        $this->assertSame(
+            $time, // return as-is
+            DateUtil::convertVcard2JcardTime( $time ),
+            __FUNCTION__ . '#' . 2
         );
     }
 

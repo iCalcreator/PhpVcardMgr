@@ -41,42 +41,6 @@ namespace Kigkonsult\PhpVcardMgr\Property;
 final class Fburl extends PropertyBase
 {
     /**
-     * Class constructor
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Fburl
-     */
-    public static function factory( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
- ) : Fburl
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string

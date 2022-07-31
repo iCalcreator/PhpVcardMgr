@@ -77,13 +77,16 @@ class JcardFormatter implements FormatterInterface
                             DateUtil::convertVcard2JcardZone( $value )
                         ];
                         break;
-                    case self::ADR :          // always seven elements in value array, fall through
-                    case self::N :            // always five elements in value array, fall through
+                    case self::ADR :          // seven elements in value array, fall through
+                    case self::N :            // five elements in value array, fall through
                         foreach( $value as $vix => $valuePart ) {
+                            if( empty( $valuePart )) {
+                                continue;
+                            }
                             if( false !== strpos( $valuePart, StringUtil::$COMMA )) {
                                 $value[$vix] = explode( StringUtil::$COMMA, $valuePart );
                             }
-                        }                     // fall through
+                        } // end foreach      // fall through
                     case self::GENDER :       // 1-2 elements in value array, fall through
                     case self::ORG :          // 1* elements in value array
                         if( 1 === count( $value )) { // if one element in value array
@@ -156,7 +159,7 @@ class JcardFormatter implements FormatterInterface
         if( isset( $parameters[self::PREF] ) ) {
             $parameters[self::PREF] = (int) $parameters[self::PREF];
         }
-        if( isset( $parameters[self::SORT_AS] ) && is_string( $parameters[self::SORT_AS] ) &&
+        if( isset( $parameters[self::SORT_AS] ) &&
             ( false !== strpos( $parameters[self::SORT_AS], StringUtil::$COMMA ))) {
             $parameters[self::SORT_AS] = explode( StringUtil::$COMMA, $parameters[self::SORT_AS] );
         }

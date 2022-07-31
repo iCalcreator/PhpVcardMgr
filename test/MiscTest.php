@@ -30,11 +30,16 @@ namespace Kigkonsult\PhpVcardMgr;
 use DateTime;
 use Faker;
 use InvalidArgumentException;
+use Kigkonsult\PhpVcardMgr\Property\Adr;
 use Kigkonsult\PhpVcardMgr\Property\Anniversary;
 use Kigkonsult\PhpVcardMgr\Property\Bday;
+use Kigkonsult\PhpVcardMgr\Property\Categories;
 use Kigkonsult\PhpVcardMgr\Property\ClientPidMap;
 use Kigkonsult\PhpVcardMgr\Property\Gender;
+use Kigkonsult\PhpVcardMgr\Property\N;
+use Kigkonsult\PhpVcardMgr\Property\Nickname;
 use Kigkonsult\PhpVcardMgr\Property\Note;
+use Kigkonsult\PhpVcardMgr\Property\Org;
 use Kigkonsult\PhpVcardMgr\Property\Prodid;
 use Kigkonsult\PhpVcardMgr\Property\Rev;
 use Kigkonsult\PhpVcardMgr\Property\Tz;
@@ -44,9 +49,15 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use Kigkonsult\PhpVcardMgr\VcardLoad\Adr  as AdrLoad;
 use Kigkonsult\PhpVcardMgr\VcardLoad\Bday as BdayLoad;
 use Kigkonsult\PhpVcardMgr\VcardLoad\N    as NLoad;
+use Kigkonsult\PhpVcardMgr\VcardLoad\Org  as OrgLoad;
 
 class MiscTest extends BaseTest
 {
+    /**
+     * @var string
+     */
+    private static $TEST   = 'test';
+
     /**
      * Test PhpVcardMgr::isVcardString()
      *
@@ -61,13 +72,13 @@ FN:John Doe
 UID:urn:uuid:03a0e51f-d1aa-4385-8a53-e29025acd8af
 END:VCARD
 ';
-        $vcardtestString = sprintf( $vcardString, '4.0' );
+        $vcardtestString = sprintf( $vcardString, Version::VERSION4 );
         $this->assertTrue(
             PhpVcardMgr::isVcardString( $vcardtestString ),
             __FUNCTION__ . ' #1 Error'
         );
         $this->assertFalse(
-            PhpVcardMgr::isVcardString( $vcardtestString, '3.0' ),
+            PhpVcardMgr::isVcardString( $vcardtestString, Version::VERSION3 ),
             __FUNCTION__ . ' #2 Error'
         );
         $this->assertFalse(
@@ -75,13 +86,13 @@ END:VCARD
             __FUNCTION__ . ' #3 Error'
         );
 
-        $vcardtestString = sprintf( $vcardString, '3.0' );
+        $vcardtestString = sprintf( $vcardString, Version::VERSION3 );
         $this->assertFalse(
             PhpVcardMgr::isVcardString( $vcardtestString ),
             __FUNCTION__ . ' #1 Error'
         );
         $this->assertTrue(
-            PhpVcardMgr::isVcardString( $vcardtestString, '3.0' ),
+            PhpVcardMgr::isVcardString( $vcardtestString, Version::VERSION3 ),
             __FUNCTION__ . ' #2 Error'
         );
         $this->assertFalse(
@@ -97,13 +108,14 @@ END:VCARD
      */
     public function propertyToStringTest() : void
     {
-        foreach( [ AdrLoad::class, NLoad::class, BdayLoad::class ] as $class ) {
-            $propString = $class::load()->__toString();
+        $testProps = [ AdrLoad::load(), NLoad::load(), BdayLoad::load(), OrgLoad::load(), OrgLoad::load() ];
+        foreach( $testProps as $property ) {
+            $propString = $property->__toString();
             $this->assertStringContainsString( 'CLASS', $propString );
             if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) { // note ==
-                self::propDisp( __METHOD__, $class, $propString ); // test ###
+                self::propDisp( __METHOD__, $property->getPropName(), $propString ); // test ###
             }
-        }
+        } // end foreach
     }
 
     /**
@@ -180,46 +192,45 @@ END:VCARD
      */
     public function stringUtilTest() : void
     {
-        static $TEST   = 'test';
         static $OTHER  = 'other';
         static $ELSE   = 'else';
         $this->assertSame(
-            $TEST,
-            StringUtil::after( $OTHER, $OTHER . $TEST )
+            self::$TEST,
+            StringUtil::after( $OTHER, $OTHER . self::$TEST )
         );
         $this->assertEmpty(
-            StringUtil::after( $OTHER, $TEST )
+            StringUtil::after( $OTHER, self::$TEST )
         );
 
         $this->assertSame(
-            $TEST,
-            StringUtil::before( $OTHER, $TEST . $OTHER )
+            self::$TEST,
+            StringUtil::before( $OTHER, self::$TEST . $OTHER )
         );
         $this->assertEmpty(
-            StringUtil::before( $TEST, $OTHER )
+            StringUtil::before( self::$TEST, $OTHER )
         );
 
         $this->assertEmpty(
-            StringUtil::between( $TEST, $OTHER, $ELSE )
+            StringUtil::between( self::$TEST, $OTHER, $ELSE )
         );
         $this->assertSame(
-            $TEST,
-            StringUtil::between( $OTHER, $ELSE, $OTHER . $TEST )
+            self::$TEST,
+            StringUtil::between( $OTHER, $ELSE, $OTHER . self::$TEST )
         );
         $this->assertSame(
-            $TEST,
-            StringUtil::between( $OTHER, $ELSE, $TEST . $ELSE )
+            self::$TEST,
+            StringUtil::between( $OTHER, $ELSE, self::$TEST . $ELSE )
         );
         $this->assertSame(
-            $TEST,
-            StringUtil::between( $OTHER, $ELSE, $OTHER . $TEST . $ELSE )
+            self::$TEST,
+            StringUtil::between( $OTHER, $ELSE, $OTHER . self::$TEST . $ELSE )
         );
 
         $this->assertTrue(
-            StringUtil::isXprefixed( 'X-' . $TEST )
+            StringUtil::isXprefixed( 'X-' . self::$TEST )
         );
         $this->assertFALSE(
-            StringUtil::isXprefixed( $TEST )
+            StringUtil::isXprefixed( self::$TEST )
         );
     }
 
@@ -230,22 +241,33 @@ END:VCARD
      */
     public function groupTest() : void
     {
-        static $TEST = 'test';
-        $bday = Bday::factory( new DateTime(), null, null, $TEST );
+        $bday = Bday::factory( new DateTime(), null, null, self::$TEST );
         $this->assertTrue( $bday->isGroupSet());
-        $this->assertSame( $TEST, $bday->getGroup());
-        $this->assertSame( $TEST . '.BDAY', $bday->getGroupPropName());
+        $this->assertSame( self::$TEST, $bday->getGroup());
+        $this->assertSame( self::$TEST . '.BDAY', $bday->getGroupPropName());
+
+        $prodid = new Prodid();
+        $this->assertSame( [], $prodid->getParameters());
+        $prodid->setGroup( self::$TEST );
+        $prodid->setParameters( [ self::$TEST, self::$TEST ] );
+        $this->assertFalse( $prodid->isGroupSet());
+        $this->assertEmpty( $prodid->getGroup());
+        $this->assertFalse( $prodid->hasParameter());
+        $prodid->unsetParameter( self::$TEST );
+        $this->assertFalse( $prodid->hasTypeParameter());
+        $this->assertFalse( $prodid->hasValueParameter());
+        $prodid->setValueType( self::$TEST );
+        $this->assertSame( Prodid::TEXT, $prodid->getValueType());
     }
 
     /**
-     * Test property parameter
+     * Property parameters test
      *
      * @test
      */
     public function parameterTest() : void
     {
-        static $TEST = 'test';
-        $bday = Bday::factory( new DateTime(), null, null, $TEST )
+        $bday = Bday::factory( new DateTime(), null, null, self::$TEST )
             ->addParameter( Bday::VALUE, Bday::DATETIME );
         $this->assertTrue( $bday->isValueSet());
         $this->assertTrue( $bday->isParametersSet());
@@ -270,15 +292,6 @@ END:VCARD
         }
         $this->assertTrue( $ok );
 
-        $ok = false;
-        try {
-            Prodid::factory()->addParameter( 'test', 'test' );
-        }
-        catch ( InvalidArgumentException $e ) {
-            $ok = true;
-        }
-        $this->assertTrue( $ok );
-
         $prop  = Version::factory();
         $this->assertFalse( $prop::isAnyParameterAllowed());
         $prop2 = $prop->addParameter( 'test', 'test' );
@@ -293,7 +306,7 @@ END:VCARD
     }
 
     /**
-     * Test invalid property valueType
+     * Invalid property valueType test
      *
      * @test
      */
@@ -307,6 +320,124 @@ END:VCARD
             $ok = true;
         }
         $this->assertTrue( $ok );
+
+        $ok = false;
+        try {
+            Categories::factory( new DateTime() );
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $ok = false;
+        try {
+            Note::factory()->setValue( new DateTime() );
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+    }
+
+    /**
+     * Test Adr properties setValue
+     *
+     * @test
+     */
+    public function adrSetValueTest() : void
+    {
+        $ok = false;
+        try {
+            Adr::factory( array_pad( [], 8, self::$TEST ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $ok = false;
+        try {
+            Adr::factory( array_pad( [], 7, StringUtil::$SP0 ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        // seven args
+        $property = Adr::factory()->setValue(
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST
+        );
+        $this->assertSame(
+            [
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+            ],
+            $property->getValue()
+        );
+
+        // six args
+        $property = Adr::factory()->setValue(
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST,
+            self::$TEST
+        );
+        $this->assertSame(
+            [
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                StringUtil::$SP0
+            ],
+            $property->getValue()
+        );
+
+        // seven element array
+        $property = Adr::factory()->setValue( array_pad( [], 7, self::$TEST ));
+        $this->assertSame(
+            array_pad( [], 7, self::$TEST ),
+            $property->getValue()
+        );
+
+        // sic element array
+        $property = Adr::factory()->setValue( array_pad( [], 6, self::$TEST ));
+        $this->assertSame(
+            [
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                StringUtil::$SP0
+            ],
+            $property->getValue()
+        );
+
+        // toString
+        $property = Adr::factory()->setValue( array_pad( [], 7, self::$TEST ));
+        $this->assertSame(
+            6,
+            substr_count( $property->__toString(), StringUtil::$SEMIC )
+        );
     }
 
     /**
@@ -314,8 +445,20 @@ END:VCARD
      *
      * @test
      */
-    public function clientPidMapTest() : void
+    public function clientPidMapSetValueTest() : void
     {
+        $property = ClientPidMap::factory()->setValue( '1 ;' . self::$TEST );
+        $this->assertSame(
+            [ 1, self::$TEST ],
+            $property->getValue()
+        );
+
+        $property = ClientPidMap::factory()->setValue( [ 1, self::$TEST ] );
+        $this->assertSame(
+            [ 1, self::$TEST ],
+            $property->getValue()
+        );
+
         $ok = false;
         try {
             ClientPidMap::factory( 'value;1' );
@@ -327,8 +470,7 @@ END:VCARD
 
         $ok = false;
         try {
-            $clientPidMap = ClientPidMap::factory( '1;value' );
-            $clientPidMap->setValue( [ 'value', 1 ] );
+            ClientPidMap::factory( [ 'value', 1 ] );
         }
         catch ( InvalidArgumentException $e ) {
             $ok = true;
@@ -337,15 +479,231 @@ END:VCARD
     }
 
     /**
-     * Test invalid property date 1
+     * Test invalid property Gender value
      *
      * @test
      */
-    public function datePropertyTest() : void
+    public function genderSetValueTest() : void
+    {
+        $property = Gender::factory()->setValue( [ 'M', self::$TEST] );
+        $this->assertSame(
+            [ 'M', self::$TEST ],
+            $property->getValue()
+        );
+
+        $ok = false;
+        try {
+            Gender::factory( 123 );
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $property = Gender::factory()->setValue( 'M' );
+        $this->assertSame(
+            [ 'M' ],
+            $property->getValue()
+        );
+
+        $property = Gender::factory()->setValue( 'M' . StringUtil::$SP0 . StringUtil::$SEMIC . self::$TEST );
+        $this->assertSame(
+            [ 'M', self::$TEST],
+            $property->getValue()
+        );
+
+        $ok = false;
+        try {
+            Gender::factory( 'ABC' );
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $property = Gender::factory()->setValue( 'M;' );
+        $this->assertSame(
+            [ 'M' ],
+            $property->getValue()
+        );
+    }
+
+    /**
+     * Test N properties setValue
+     *
+     * @test
+     */
+    public function nSetValueTest() : void
     {
         $ok = false;
         try {
-            Bday::factory( 'ABC' );
+            N::factory( array_pad( [], 6, self::$TEST ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $ok = false;
+        try {
+            N::factory( array_pad( [], 5, StringUtil::$SP0 ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        // five args
+        $property = N::factory()->setValue( self::$TEST, self::$TEST, self::$TEST, self::$TEST, self::$TEST );
+        $this->assertSame(
+            array_pad( [], 5, self::$TEST ),
+            $property->getValue()
+        );
+
+        // four args
+        $property = N::factory()->setValue( self::$TEST, self::$TEST, self::$TEST, self::$TEST );
+        $this->assertSame(
+            [
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                StringUtil::$SP0
+            ],
+            $property->getValue()
+        );
+
+        // five element array
+        $property = N::factory()->setValue( array_pad( [], 5, self::$TEST ));
+        $this->assertSame(
+            array_pad( [], 5, self::$TEST ),
+            $property->getValue()
+        );
+
+        // four element array
+        $property = N::factory()->setValue( array_pad( [], 4, self::$TEST ));
+        $this->assertSame(
+            [
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                self::$TEST,
+                StringUtil::$SP0
+            ],
+            $property->getValue()
+        );
+
+        // toString
+        $property = N::factory()->setValue( array_pad( [], 5, self::$TEST ));
+        $this->assertSame(
+            4,
+            substr_count( $property->__toString(), StringUtil::$SEMIC )
+        );
+
+        // sort-as parameter as input array
+        $property = N::factory(
+            array_pad( [], 5, self::$TEST ),
+            [ N::SORT_AS => [ N::SORT_AS, self::$TEST ]]
+        );
+        $this->assertSame(
+            N::SORT_AS . StringUtil::$COMMA . self::$TEST,
+            $property->getParameters( N::SORT_AS )
+        );
+    }
+
+    /**
+     * Test Nickname properties setValue
+     *
+     * @test
+     */
+    public function nicknameSetValueTest() : void
+    {
+        $property = Nickname::factory()->setValue( [ self::$TEST, self::$TEST ] );
+        $this->assertSame(
+            [ self::$TEST, self::$TEST ],
+            $property->getValue()
+        );
+
+        $ok = false;
+        try {
+            Nickname::factory( 123 );
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        $property = Nickname::factory()->setValue( self::$TEST . StringUtil::$COMMA . self::$TEST );
+        $this->assertSame(
+            [ self::$TEST, self::$TEST ],
+            $property->getValue()
+        );
+
+        $property = Nickname::factory()->setValue( self::$TEST );
+        $this->assertSame(
+            [ self::$TEST  ],
+            $property->getValue()
+        );
+    }
+
+    /**
+     * Test ORG properties setValue
+     *
+     * @test
+     */
+    public function orgSetValueTest() : void
+    {
+        $ok = false;
+        try {
+            Org::factory( array_pad( [], 5, self::$TEST ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertfalse( $ok );
+
+        $property = Org::factory()->setValue( implode( StringUtil::$SEMIC, [ self::$TEST, self::$TEST] ));
+        $this->assertSame(
+            array_pad( [], 2, self::$TEST ),
+            $property->getValue()
+        );
+
+        $property = Org::factory()->setValue( self::$TEST );
+        $this->assertSame(
+            [ self::$TEST ],
+            $property->getValue()
+        );
+
+        $ok = false;
+        try {
+            Org::factory( array_pad( [], 5, StringUtil::$SP0 ));
+        }
+        catch ( InvalidArgumentException $e ) {
+            $ok = true;
+        }
+        $this->assertTrue( $ok );
+
+        // sort-as parameter as input array
+        $property = Org::factory(
+            array_pad( [], 5, self::$TEST ),
+            [ Org::SORT_AS => [ Org::SORT_AS, self::$TEST ]]
+        );
+        $this->assertSame(
+            Org::SORT_AS .StringUtil::$COMMA . self::$TEST,
+            $property->getParameters( Org::SORT_AS )
+        );
+    }
+
+    /**
+     * Test invalid property tz value
+     *
+     * @test
+     */
+    public function tzTest() : void
+    {
+        $ok = false;
+        try {
+            Tz::factory( 'ABC', [], Tz::UTCOFFSET );
         }
         catch ( InvalidArgumentException $e ) {
             $ok = true;
@@ -354,7 +712,7 @@ END:VCARD
     }
 
     /**
-     * Test invalid property date 2
+     * Test invalid property date
      *
      * @test
      */
@@ -389,39 +747,5 @@ END:VCARD
                 $property->getValue()
             );
         }
-    }
-
-    /**
-     * Test invalid property gender value
-     *
-     * @test
-     */
-    public function genderTest() : void
-    {
-        $ok = false;
-        try {
-            Gender::factory( 'ABC' );
-        }
-        catch ( InvalidArgumentException $e ) {
-            $ok = true;
-        }
-        $this->assertTrue( $ok );
-    }
-
-    /**
-     * Test invalid property tz value
-     *
-     * @test
-     */
-    public function tzTest() : void
-    {
-        $ok = false;
-        try {
-            Tz::factory( 'ABC', [], Tz::UTCOFFSET );
-        }
-        catch ( InvalidArgumentException $e ) {
-            $ok = true;
-        }
-        $this->assertTrue( $ok );
     }
 }

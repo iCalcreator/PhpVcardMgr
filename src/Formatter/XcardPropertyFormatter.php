@@ -56,8 +56,9 @@ class XcardPropertyFormatter extends XcardFormatterBase
                 $this->writeAdr( $property );
                 break;
             case self::CATEGORIES : // fall through
+            case self::NICKNAME :   // fall through
             case self::ORG :
-                $this->writeCatagoriesOrg( $property );
+                $this->writeListValue( $property );
                 break;
             case self::CLIENTPIDMAP :
                 $this->writeClientPidMap( $property );
@@ -67,6 +68,17 @@ class XcardPropertyFormatter extends XcardFormatterBase
                 break;
             case self::N :
                 $this->writeN( $property );
+                break;
+            case self::XML :
+                /*
+                $this->writer->startElement( strtolower( $property->getValueType()));
+                $this->writer->writeRaw( $property->getValue());
+                $this->writer->endElement();
+                */
+                $this->writeTextElement(
+                    strtolower( $property->getValueType()),
+                    htmlspecialchars( $property->getValue())
+                );
                 break;
             default :
                 $this->writeTextElement( strtolower( $property->getValueType()), $property->getValue());
@@ -103,6 +115,10 @@ class XcardPropertyFormatter extends XcardFormatterBase
     private function writeAdrN( PropertyInterface $property, array $valueKeys ) : void
     {
         foreach( $property->getValue() as $vix => $valuePart ) {
+            if( empty( $valuePart )) {
+                $this->writeTextElement( $valueKeys[$vix], StringUtil::$SP0 );
+                continue;
+            }
             foreach( explode( StringUtil::$COMMA, $valuePart ) as $valuePart3 ) {
                 $this->writeTextElement( $valueKeys[$vix], trim( $valuePart3 ));
             }
@@ -128,7 +144,7 @@ class XcardPropertyFormatter extends XcardFormatterBase
     private function writeGender( PropertyInterface $property ) : void
     {
         $value = $property->getValue();
-        $this->writeTextElement( Gender::$valueComponents[0], $value[0] ?? StringUtil::$SP0 );
+        $this->writeTextElement( Gender::$valueComponents[0], ( $value[0] ?? StringUtil::$SP0 ));
         if( isset( $value[1] )) {
             $this->writeTextElement( Gender::$valueComponents[1], $value[1] );
         }
@@ -139,7 +155,7 @@ class XcardPropertyFormatter extends XcardFormatterBase
      *
      * @param PropertyInterface $property
      */
-    private function writeCatagoriesOrg( PropertyInterface $property ) : void
+    private function writeListValue( PropertyInterface $property ) : void
     {
         $valueType = strtolower( $property->getValueType());
         foreach( $property->getValue() as $value ) {
@@ -172,6 +188,12 @@ class XcardPropertyFormatter extends XcardFormatterBase
                     break;
                 case self::PREF :
                     $valueType = self::$INTEGER;
+                    break;
+                case self::SORT_AS :
+                    if(( false !== strpos( $pValue, StringUtil::$COMMA ))) {
+                        $pValue = explode( StringUtil::$COMMA, $pValue );
+                    }
+                    $valueType = self::TEXT;
                     break;
                 case self::LABEL :
                     if(( false !== strpos( $pValue, StringUtil::$STREOL ))) {

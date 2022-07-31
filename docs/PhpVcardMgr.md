@@ -12,6 +12,7 @@
 ```PhpVcardMgr::__construct()```
 * Return _PhpVcardMgr_
 
+
 ```PhpVcardMgr::__factory()```
 * Return _PhpVcardMgr_
 
@@ -21,16 +22,20 @@
 * Format (internal) Vcards into Vcard 3.0 string
 * Return _string_
 
+
 ```PhpVcardMgr::vCard4Format()```
 * Format (internal) Vcards into Vcard 4.0 string
 * Return _string_
+
 
 ```PhpVcardMgr::jCardFormat()```
 * Format (internal) Vcards into Jcard string
 * Return _string_
 
+
 ```PhpVcardMgr::xCardFormat()```
 * Format (internal) Vcards into Xcard XML string
+  <br>format Vcard XML properties value using `htmlspecialchars` 
 * Return _string_
 
 ###### PhpVcardMgr parse methods
@@ -41,11 +46,13 @@
 * Return _static_
 * Throws _InvalidArgumentException_
 
+
 ```PhpVcardMgr::vCard4Parse( inputString )```
 * Parse inputString into (internal) Vcards
 * `inputString` _string_, in Vcard 4.0 format
 * Return _static_
 * Throws _InvalidArgumentException_
+
 
 ```PhpVcardMgr::jCardParse( inputString )```
 * Parse inputString into (internal) Vcards
@@ -53,8 +60,10 @@
 * Return _static_
 * Throws _InvalidArgumentException_, _RuntimeException_
 
+
 ```PhpVcardMgr::xCardParse( inputString )```
 * Parse inputString into (internal) Vcards
+  <br>parse Xcard XML (property) elements value using `htmlspecialchars_decode` 
 * `inputString` _string_, in Xcard XML format
 * Return _static_
 * Throws _InvalidArgumentException_, _RuntimeException_
@@ -72,6 +81,7 @@
 
 ```PhpVcardMgr::getVCards()```
 * Return _Vcard[]_
+
 
 ```PhpVcardMgr::addVCard( vCard )```
 * `vCard` _Vcard_

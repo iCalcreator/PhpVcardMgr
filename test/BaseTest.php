@@ -27,6 +27,7 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr;
 
+use Faker;
 use Kigkonsult\PhpVcardMgr\Property\Uid;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use Kigkonsult\PhpVcardMgr\VcardLoad\Vcard as VcardLoader;
@@ -42,6 +43,11 @@ abstract class BaseTest extends TestCase
         return str_replace( $repl, StringUtil::$CRLF, $string );
     }
     /**
+     * Return 'FakerPHP'-ed Vcards[]
+     *
+     * trailing UID based on 'case' and Vcard-order-number
+     * some multi-props with group or not
+     *
      * @param int|string $case
      * @param null|bool $datetimeDateOnly
      * @return Vcard[]
@@ -49,13 +55,28 @@ abstract class BaseTest extends TestCase
     public static function getFakerVcards( $case, ? bool $datetimeDateOnly = false ) : array
     {
         static $DS1 = '-';
+        $faker  = Faker\Factory::create();
         $fakerVcardLoads = (int) ( $GLOBALS['fakerVcardLoads'] ?? 3 );
-        $case   = str_pad((string) $case, 5, $DS1 );
+        $case   = str_pad((string) $case, 5, $DS1, STR_PAD_LEFT );
         $vCards = [];
         for( $x = 1; $x <= $fakerVcardLoads; $x++ ) {
-            $uidStr     = substr( StringUtil::getNewUid(), 0, -7 ) . $case . $DS1 . $x;
-            $vCards[$x] = VcardLoader::load( $datetimeDateOnly )->addProperty( Uid::factory( $uidStr ));
-        }
+            $groups = array_pad( $faker->words( 2), 4, null );
+            $xDisp  = ( 10 > $x ) ? $DS1 . $x : $x;
+            $uidStr = substr( StringUtil::getNewUid(), 0, -8 ) . $case . $DS1 . $xDisp;
+            $vCard  = VcardLoader::load( $datetimeDateOnly )->addProperty( Uid::factory( $uidStr ));
+            // supply some multi-props with group or not
+            $props  = [];
+            foreach( [ Vcard::ADR, Vcard::EMAIL, Vcard::ORG, Vcard::TEL, Vcard::XPREFIX] as $propName ) {
+                foreach( $vCard->getProperties( $propName ) as $property ) {
+                    $group  = $faker->randomElement( $groups );
+                    if( ! empty( $group ) ) {
+                        $property->setGroup( $group );
+                    }
+                    $props[] = $property;
+                } // end foreach
+            } // end foreach
+            $vCards[$x] = $vCard->replaceProperty( $props );
+        } // end for
         return $vCards;
     }
 

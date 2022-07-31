@@ -27,6 +27,7 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Formatter;
 
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use XMLWriter;
 
 class XcardFormatter extends XcardFormatterBase
@@ -44,22 +45,22 @@ class XcardFormatter extends XcardFormatterBase
         $this->writer->startAttribute( self::XVCARDSAttr );
         $this->writer->text( self::XVCARDSAttrval );
         $this->writer->endAttribute();
-        $prevGroup = null;
         $xcardPropertyFormatter = XcardPropertyFormatter::factory( $this->writer );
         foreach( $vCards as $vCard ) {
-            $this->writer->startElement( self::XVCARD );
+            $prevGroup = StringUtil::$SP0;
+            $this->writer->startElement( self::XVCARD ); // start xCard
             foreach( $vCard->getProperties() as $property) {
                 if( self::VERSION === $property->getPropName()) {
                     continue;
                 }
-                $group = $property->getGroup();
+                $group = $property->getGroup() ?? StringUtil::$SP0;
                 if( $prevGroup !== $group ) {
                     if( ! empty( $prevGroup )) {
-                        $this->writer->endElement();
+                        $this->writer->endElement(); // end group
                         $prevGroup = null;
                     }
                     if( ! empty( $group )) {
-                        $this->writer->startElement( self::XGROUP );
+                        $this->writer->startElement( self::XGROUP );  // start group
                         $this->writer->startAttribute( self::XNAME );
                         $this->writer->text( $group );
                         $this->writer->endAttribute();
@@ -67,12 +68,12 @@ class XcardFormatter extends XcardFormatterBase
                     }
                 } // end if
                 $xcardPropertyFormatter->write( $property );
-            } // end foreach
-            $this->writer->endElement();
+            } // end foreach properties
+            if( ! empty( $prevGroup )) {
+                $this->writer->endElement();
+            }
+            $this->writer->endElement(); // end xCard
         } // end forech
-        if( ! empty( $prevGroup )) {
-            $this->writer->endElement();
-        }
         $this->writer->endElement();
         return $this->writer->outputMemory();
     }

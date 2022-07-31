@@ -50,10 +50,11 @@ final class Categories extends LoadBase
      */
     public static function load() : Dto
     {
-        $faker     = Faker\Factory::create();
-        $valueType = $faker->randomElement( Dto::getAcceptedValueTypes());
+        $faker      = Faker\Factory::create();
+        $categories = $faker->words( 2 );
+        $valueType  = $faker->randomElement( Dto::getAcceptedValueTypes());
         return Dto::factory(
-            implode( ',', $faker->words( 2 )),
+            ( $faker->boolean ?  implode( ',', $categories ) : $categories ),
             self::loadParameters( Dto::getAcceptedParameterKeys(), $valueType, Dto::isAnyParameterAllowed()),
             $valueType
         );

@@ -55,18 +55,19 @@ abstract class PropertyDate extends PropertyBase
             return $this;
         }
         $valueType = $this->getValueType() ?? self::getAcceptedValueTypes( true );
+        $propName  = $this->getPropName();
         switch( $valueType ) {
             case self::DATEANDORTIME :
-                DateUtil::assertVcardDateAndOrTime( $this->getPropName(), $value );
+                DateUtil::assertVcardDateAndOrTime( $propName, $value );
                 break;
             case self::DATETIME :
-                DateUtil::assertVcardDateTime( $this->getPropName(), $value );
+                DateUtil::assertVcardDateTime( $propName, $value );
                 break;
             case self::DATE :
-                DateUtil::assertVcardDate( $this->getPropName(), $value );
+                DateUtil::assertVcardDate( $propName, $value );
                 break;
             case self::TIME :
-                DateUtil::assertVcardTime( $this->getPropName(), $value );
+                DateUtil::assertVcardTime( $propName, $value );
                 break;
             // for valueType TEXT: accept as-is
         } // end switch

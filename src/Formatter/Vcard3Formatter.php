@@ -43,7 +43,6 @@ class Vcard3Formatter implements FormatterInterface
      */
     public function format( array $vCards ) : string
     {
-        static $VERSIONno = '3.0';
         $propRows = [];
         foreach( $vCards as $vCard ) {
             $propRows[] = self::BEGIN_VCARD;
@@ -51,7 +50,7 @@ class Vcard3Formatter implements FormatterInterface
                 $propName = $property->getPropName();
                 switch( $propName ) {
                     case self::VERSION :
-                        $propRows[] = self::VERSION . StringUtil::$COLON . $VERSIONno;
+                        $propRows[] = self::VERSION . StringUtil::$COLON . self::VERSION3;
                         break;
                     case self::BDAY :     // fall through
                     case self::REV :
@@ -67,7 +66,6 @@ class Vcard3Formatter implements FormatterInterface
                         $propRows[] = self::processUid( $property );
                         break;
                     case self::LOGO :     // fall through
-                    case self::NICKNAME : // fall through
                     case self::PHOTO :    // fall through
                     case self::SOURCE :   // fall through
                     case self::TEL :      // fall through
@@ -91,7 +89,8 @@ class Vcard3Formatter implements FormatterInterface
                     case self::ADR :
                         $propRows[] = self::processValueArrSemic( $property );
                         break;
-                    case self::CATEGORIES :
+                    case self::CATEGORIES : // fall through
+                    case self::NICKNAME :
                         $propRows[] = self::processValueArrComma( $property );
                         break;
                     case self::PRODID :   // fall througyh
@@ -370,6 +369,7 @@ class Vcard3Formatter implements FormatterInterface
         if( strpos( $propName, self::XPREFIX ) !== 0 ) {
             $propName = self::XPREFIX . $propName;
         }
+        $propName = $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName;
         $value    = $property->getValue();
         if( is_array( $value )) {
             $value = implode( StringUtil::$SEMIC, $value );
@@ -377,7 +377,7 @@ class Vcard3Formatter implements FormatterInterface
         elseif( self::TEXT === $property->getValueType()) {
             $value = VcardFormatterUtil::strrep( $value );
         }
-        return ( $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName ) .
+        return $propName .
             VcardFormatterUtil::createParams(
                 self::unprepXparameters( $property->getParameters()),
                 $property::getAcceptedParameterKeys()
@@ -395,11 +395,12 @@ class Vcard3Formatter implements FormatterInterface
     private static function processX4Props( PropertyInterface $property ) : string
     {
         $propName = substr( $property->getPropName(), 2 );
+        $propName = $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName;
         $value    = $property->getValue();
         $value =  is_array( $value )
             ? implode( StringUtil::$SEMIC, $value )
-            : VcardFormatterUtil::strrep( $property->getValue());
-        return ( $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName ) .
+            : VcardFormatterUtil::strrep( $value);
+        return $propName .
             VcardFormatterUtil::createParams(
                 self::unprepXparameters( $property->getParameters()),
                 $property::getAcceptedParameterKeys()

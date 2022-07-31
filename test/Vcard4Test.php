@@ -75,11 +75,9 @@ class Vcard4Test extends BaseTest
         $vCards = PhpVcardMgr::factory()->vCard4Parse( $vcardString )->getVCards();
         $this->assertIsArray( $vCards );
         // display prop
-        /*
         if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) {
-            self::propDisp( __METHOD__, $case, $vCards, PhpVcardMgr::Related ); // test ###
+            self::propDisp( __METHOD__, $case, $vCards, PhpVcardMgr::MEMBER ); // test ###
         }
-        */
 
         $vcardString2 = PhpVcardMgr::factory()->setVCards( $vCards )->vCard4Format();
 

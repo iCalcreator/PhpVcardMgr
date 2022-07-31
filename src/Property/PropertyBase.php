@@ -27,7 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use DateTime;
 use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
@@ -38,7 +37,7 @@ abstract class PropertyBase implements PropertyInterface
      *
      * @return string
      */
-    abstract public function getPropName() : string ;
+    abstract public function getPropName() : string;
 
     /**
      * Property group
@@ -69,38 +68,58 @@ abstract class PropertyBase implements PropertyInterface
     protected $value;
 
     /**
-     * @param int|float|string|array|DateTime $value
+     * Class constructor
+     *
+     * @param null|string|array||DateTime $value
      * @param null|array $parameters
      * @param null|string $valueType
      * @param null|string $group
-     * ·@return void
-     * @throws InvalidArgumentException
      */
-    protected function populate(
-        $value,
+    public function __construct(
+        $value = null,
         ? array $parameters = [],
         ? string $valueType = null,
         ? string $group = null
-    ) : void
-    {
-        if( ! empty( $group )) {
+    ) {
+        if( null !== $group ) {
             $this->setGroup( $group );
         }
         if( ! empty( $parameters )) {
             $this->setParameters( $parameters );
         }
         switch( true ) {
-            case ! empty( $valueType ) :
+            case ( null !== $valueType ) :
                 break;
             case $this->hasValueParameter() :
                 $valueType = (string) $this->getParameters( self::VALUE );
                 break;
             default :
-                $valueType = static::getAcceptedValueTypes( true );
+                $valueType = (string) static::getAcceptedValueTypes( true );
                 break;
         } // end switch
         $this->setValueType( $valueType );
-        $this->setValue( $value );
+        if( null !== $value ) {
+            $this->setValue( $value );
+        }
+    }
+
+    /**
+     * Class factory method
+     *
+     * @param null|string|array||DateTime $value
+     * @param null|array $parameters
+     * @param null|string $valueType
+     * @param null|string $group
+     * @return static
+     */
+    public static function factory(
+        $value = null,
+        ? array $parameters = [],
+        ? string $valueType = null,
+        ? string $group = null
+    ) : PropertyInterface
+    {
+        return new static( $value, $parameters, $valueType, $group );
     }
 
     /**
@@ -120,10 +139,9 @@ abstract class PropertyBase implements PropertyInterface
     }
 
     /**
-     * @param null $group
-     * @return static
+     * @inheritDoc
      */
-    public function setGroup( $group ) : PropertyInterface
+    public function setGroup( string $group ) : PropertyInterface
     {
         $this->group = $group;
         return $this;
@@ -134,8 +152,8 @@ abstract class PropertyBase implements PropertyInterface
      */
     public function getGroupPropName() : string
     {
-        $propName   = $this->getPropName();
-        return $this->isGroupSet() ? $this->getGroup() . StringUtil::$DOT . $propName : $propName;
+        $propName = $this->getPropName();
+        return $this->isGroupSet() ? ( $this->getGroup() . StringUtil::$DOT . $propName ) : $propName;
     }
 
     /**
@@ -237,10 +255,10 @@ abstract class PropertyBase implements PropertyInterface
             ( false !== strpos( $value, StringUtil::$COMMA ))) {
             $value = explode( StringUtil::$COMMA, $value );
         }
+        if(( self::SORT_AS === $key ) && is_array( $value )) {
+            $value = implode( StringUtil::$COMMA, $value );
+        }
         switch( true ) {
-            case (( self::SORT_AS === $key ) && is_array( $value )):
-                $value = explode( StringUtil::$COMMA, $value );
-                break;
             case ( self::TYPE !== $key ) :
                 break;
             case in_array( $this->getPropName(), $NoTypeProps, true ) :
@@ -300,21 +318,19 @@ abstract class PropertyBase implements PropertyInterface
      */
     public function setValueType( string $valueType ) : PropertyInterface
     {
-        static $ERR1 = 'Unknown value type \'%s\', %s expected for %s';
+        static $ERR1 = 'Unknown %s value type \'%s\', (any of) %s expected';
         $acceptedValueTypes = static::getAcceptedValueTypes();
-        if( ! in_array( $valueType, $acceptedValueTypes, true )) {
+        if( ! in_array( strtolower( $valueType ), $acceptedValueTypes, true )) {
             throw new InvalidArgumentException(
                 sprintf(
                     $ERR1,
+                    $this->getPropName(),
                     $valueType,
-                    implode( StringUtil::$COMMA, $acceptedValueTypes ),
-                    $this->getPropName()
+                    implode( StringUtil::$COMMA, $acceptedValueTypes )
                 )
             );
         }
-        $this->valueType = in_array( strtolower( $valueType ), static::getAcceptedValueTypes(), true )
-            ? strtolower( $valueType )
-            : $valueType;
+        $this->valueType = strtolower( $valueType );
         return $this;
     }
 
@@ -333,33 +349,38 @@ abstract class PropertyBase implements PropertyInterface
     {
         return ( null !== $this->value );
     }
-    
+
     /**
      * @inheritDoc
+     * @throws InvalidArgumentException
      */
     public function setValue( $value ) : PropertyInterface
     {
-        $this->value = self::trimSub( $value );
+        static $ERR = '%s expects string, got \'%s\'' ;
+        if( ! is_string( $value )) {
+            throw new InvalidArgumentException(
+                sprintf( $ERR, $this->getPropName(), var_export( $value, true ))
+            );
+        }
+        $this->value = trim( $value );
         return $this;
     }
 
     /**
-     * @param string|string[] $value
-     * @return string|string[]
+     * @param string[] $value
+     * @return string[]
      */
-    protected static function trimSub( $value )
+    protected static function trimSub( array $value ) : array
     {
-        return is_array( $value )
-            ? array_map(
-                static function( $g ) {
-                    if( ! is_string( $g )) {
-                        return $g;
-                    }
-                    return empty( $g ) ? StringUtil::$SP0 : trim( $g );
-                },
-                $value
-            )
-            : $value;
+        return array_map(
+            static function( $g ) {
+                if(( null !== $g ) && ! is_string( $g )) {
+                    return $g;
+                }
+                return empty( $g ) ? StringUtil::$SP0 : trim( $g );
+            },
+            $value
+        );
     }
 
     /**
@@ -371,6 +392,7 @@ abstract class PropertyBase implements PropertyInterface
             '--CLASS--      : ',
             'propName       : ',
             'Acc parKeys    : ',
+            'Acc iana/X-par : ',
             'parameter      : ',
             ' => ',
             '-',
@@ -378,22 +400,30 @@ abstract class PropertyBase implements PropertyInterface
             'valueType      : ',
             'value          : '
         ];
+        static $COMMASEPs = [ self::CATEGORIES, self::NICKNAME ];
         $output   = [ $WORDs[0] . get_class( $this ) ];
         $output[] = $WORDs[1] . $this->getGroupPropName();
         $output[] = $WORDs[2] . implode( StringUtil::$COMMA, static::getAcceptedParameterKeys());
+        $output[] = $WORDs[3] . var_export( static::isAnyParameterAllowed(), true );
         if( $this->isParametersSet()) {
             foreach( $this->parameters as $pKey => $pValue ) {
-                $output[] = $WORDs[3] . str_pad( $pKey, 10 ) . $WORDs[4] .
+                $output[] = $WORDs[4] . str_pad( $pKey, 10 ) . $WORDs[5] .
                     ( is_array( $pValue ) ? implode( StringUtil::$COMMA, $pValue ) : $pValue );
             }
         }
         else {
-            $output[] = $WORDs[3] . $WORDs[5];
+            $output[] = $WORDs[4] . $WORDs[6];
         }
-        $output[] = $WORDs[6] . implode( StringUtil::$COMMA, static::getAcceptedValueTypes());
-        $output[] = $WORDs[7] . $this->getValueType();
-        $value    = $this->getValue();
-        $output[] = $WORDs[8] . ( is_array( $value ) ? implode( StringUtil::$SEMIC, $value ) : $value );
+        $output[]  = $WORDs[7] . implode( StringUtil::$COMMA, static::getAcceptedValueTypes());
+        $output[]  = $WORDs[8] . $this->getValueType();
+        $value     = $this->getValue();
+        if( is_array( $value )) {
+            $sep   = in_array( $this->getPropName(), $COMMASEPs, true )
+                ? StringUtil::$COMMA
+                : StringUtil::$SEMIC;
+            $value = implode( $sep, $value );
+        }
+        $output[] = $WORDs[9] . $value;
         return implode( PHP_EOL, $output ) . PHP_EOL;
     }
 }

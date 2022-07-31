@@ -27,26 +27,78 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-/**
- * MEMBER
- *
- * include a member in the group this vCard represents
- *
- * Value type:  A single URI.  It MAY refer to something other than a vCard object.
- * For example, an email distribution list could employ the "mailto" URI scheme [RFC6068] for efficiency.
- * Cardinality: *
- *
- * MEMBER-param = "VALUE=uri" / pid-param / pref-param / altid-param / mediatype-param / any-param
- * MEMBER-value = URI
- */
-final class Member extends PropertyBase
+abstract class PropertyPV extends PropertyBase
 {
+    /**
+     * @override
+     */
+    public function getGroup() : ? string
+    {
+        return null;
+    }
+
+    /**
+     * @override
+     */
+    public function isGroupSet() : bool
+    {
+        return false;
+    }
+
+    /**
+     * @override
+     */
+    public function setGroup( string $group ) : PropertyInterface
+    {
+        return $this;
+    }
+
     /**
      * @inheritDoc
      */
-    public function getPropName() : string
+    public function getGroupPropName() : string
     {
-        return self::MEMBER;
+        return $this->getPropName();
+    }
+
+    /**
+     * @override
+     */
+    public function getParameters( ? string $key = null ) : array
+    {
+        return [];
+    }
+
+    /**
+     * @override
+     */
+    public function hasParameter( ? string $key = null ) : bool
+    {
+        return false;
+    }
+
+    /**
+     * @override
+     */
+    public function hasValueParameter() : bool
+    {
+        return false;
+    }
+
+    /**
+     * @override
+     */
+    public function hasTypeParameter( ? string $typeValue = null) : bool
+    {
+        return false;
+    }
+
+    /**
+     * @override
+     */
+    public function isParametersSet() : bool
+    {
+        return false;
     }
 
     /**
@@ -54,13 +106,7 @@ final class Member extends PropertyBase
      */
     public static function getAcceptedParameterKeys() : array
     {
-        return [
-            self::VALUE,
-            self::PID,
-            self::PREF,
-            self::ALTID,
-            self::MEDIATYPE,
-        ];
+        return [];
     }
 
     /**
@@ -68,15 +114,47 @@ final class Member extends PropertyBase
      */
     public static function isAnyParameterAllowed() : bool
     {
-        return true;
+        return false;
     }
 
     /**
      * @override
      */
-    public static function getAcceptedValueTypes( ? bool $default = false )
+    public function addParameter( string $key, $value ) : PropertyInterface
     {
-        return $default ? self::URI : [ self::URI ];
+        return $this;
+    }
+
+    /**
+     * @override
+     */
+    public function setParameters( array $parameters ) : PropertyInterface
+    {
+        return $this;
+    }
+
+    /**
+     * @override
+     */
+    public function unsetParameter( string $key ) : PropertyInterface
+    {
+        return $this;
+    }
+
+    /**
+     * @override
+     */
+    public function getValueType() : ? string
+    {
+        return self::TEXT;
+    }
+
+    /**
+     * @override
+     */
+    public function setValueType( string $valueType ) : PropertyInterface
+    {
+        return $this;
     }
 
     /**
@@ -84,11 +162,6 @@ final class Member extends PropertyBase
      */
     public function setValue( $value ) : PropertyInterface
     {
-        static $MAILTO = 'mailto:';
-        if( 0 === stripos( substr( $value, 0, 7 ), $MAILTO )) {
-            $value = substr( $value, 7 );
-        }
-        $this->value = $value;
         return $this;
     }
 }

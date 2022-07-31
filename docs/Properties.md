@@ -26,31 +26,55 @@ _Tel_, _Title_, _Tz_, _Uid_, _Url_, _Version_, _Xml_ and _Xprop_ (manages _X-_ p
 * Exactly one instance per [Vcard] is allowed for _ANNIVERSARY_, _BDAY_, _GENDER_, _N_, _REV_, _UID_ or _X-_
   property classes, adding a second will replace the first
  
-* Opt property comma-separated **value** lists are accepted (as-is),
-  <br>but recommend to split **value** into two or more properties
 
+* Opt property comma-separated **value** lists may be accepted (as-is),
+  * recommend to split **value** into two or more properties
+    <br>(using opt parameters _PREFS_ / _TYPE_)
+ 
 
-* Property classes _VERSION_, _PRODID_, _UID_ (uuid) always auto set in [Vcard] 
+* _VERSION_, _PRODID_, _UID_ (uuid) property classes always auto set in [Vcard] 
 
 * _ADR_ property class
-    * accepts _value_ as seven-element array or SEMICOLON separated string
+  * accepts _value_ as seven-element string array or SEMICOLON separated string
+  * method _getValue_ returns array
 
-* _N_ property class
-  * accepts _value_ as five-element array or SEMICOLON separated string
-  
-* _CLIENTPIDMAP_ property class
-  * accepts _value_ as two-element array or SEMICOLON separated string
-  
 * _ANNIVERSARY_ property class
-   * expects _valueType_ DATE-AND-OR-TIME (, DATE-TIME, DATE) OR TEXT,
-   <br>accepts (value as) DateTime or date(-time) string
- 
+  * expects _valueType_ DATE-AND-OR-TIME (, DATE-TIME, DATE) OR TEXT,
+    <br>accepts _value_ as DateTime or date(-time) string
+  * method _getValue_ returns string
+
 * _BDAY_ property class
   * expects _valueType_ DATE-AND-OR-TIME (, DATE-TIME, DATE) OR TEXT,
-  <br>accepts (value as) DateTime or date(-time) string
+    <br>accepts _value_ as DateTime or date(-time) string
+  * method _getValue_ returns string
+
+* _CATEGORIES_ property class
+  * accepts _value_ as string array or COMMA separated string
+  * method _getValue_ returns array
+
+* _CLIENTPIDMAP_ property class
+  * accepts _value_ as two-element int/string array or SEMICOLON separated string
+  * method _getValue_ returns array
+ 
+* _GENDER_ property class
+  * accepts _value_ as one/two-element string array or SEMICOLON separated string
+  * method _getValue_ returns array
+
+* _N_ property class
+  * accepts _value_ as five-element string array or SEMICOLON separated string
+  * method _getValue_ returns array
+
+* _NICKNAME_ property class
+  * accepts _value_ as string array or COMMA separated string
+  * method _getValue_ returns array
+
+* _ORG_ property class
+  * accepts _value_ as string, string array or SEMICOLON separated string
+  * method _getValue_ returns array
  
 * _REV_ property class
   * (_valueType_ TIMESTAMP) accepts _value_ (UTC) DateTime or date-time string
+  * method _getValue_ returns string
 
 
 * using the Vcard3Formatter
@@ -61,6 +85,13 @@ _Tel_, _Title_, _Tz_, _Uid_, _Url_, _Version_, _Xml_ and _Xprop_ (manages _X-_ p
   * Vcard 3.0 unique properties are parsed and renamed as X-property
   * X-prefixed Vcard 4.0 unique properties identified
   * X-properties are parsed as-is
+
+
+* using the XcardFormatter
+  * the Vcard XML properties value are formatted using `htmlspecialchars`
+ 
+* using the XcardParser
+  * the Xcard XML properties value are parsed using `htmlspecialchars_decode`
 
 
 * _iana_ and _x-named_ class property **parameter** keys (prefixed by _X-_) are mostly accepted
@@ -83,9 +114,22 @@ Some limitations on `Prodid` and `Version` classes.
 * Return _Property_
 * Throws _InvalidArgumentException_
 
+
 ```Property::factory( value [, parameters [, valueType [, group ]]] )```
 * Arguments same as for `__construct`, above
 * Return _Property_
+
+
+```Xprop::__construct( propName, value [, parameters [, valueType [, group ]]] )```
+* `propName` _string_  will be x-prefixed if not
+* other arguments same as for `__construct`, above
+* Return _Xprop_
+
+
+```Xprop::factoryX( propName, value [, parameters [, valueType [, group ]]] )```
+* `propName` _string_  will be x-prefixed if not
+* other arguments same as for `__construct`, above
+* Return _Xprop_
 
 ###### Property _parameters_ methods
 
@@ -94,23 +138,28 @@ Some limitations on `Prodid` and `Version` classes.
 * `key` _string_
 * return _bool_ | _string_ | _array_
 
+
 ```Property::hasParameter( key )```
 * Return bool true if parameter key is set
 * `key` _string_
 * return _bool_
+
 
 ```Property::hasTypeParameter( [ typeValue ] )```
 * Return bool true if parameter key _Type_ (opt with typeValue ) is set
 * `typeValue` _string_
 * return _bool_
 
+
 ```Property::hasValueParameter()```
 * Return bool true if parameter key _Value_ is set
 * return _bool_
 
+
 ```Property::isParametersSet()```
 * Return bool true if any parameter is set
 * return _bool_
+
 
 ```Property::addParameter( key, value )```
 * Add parameter, if exists, replace.<br>For some properties, the TYPE parameter is (silently) skiped, otherwise forced into array
@@ -119,11 +168,13 @@ Some limitations on `Prodid` and `Version` classes.
 * return _Property_
 * throws InvalidArgumentException
 
+
 ```Property::setParameters( parameters )```
 * Set array of parameters
 * `parameters` _array_  key/value pairs
 * return _Property_
 * throws InvalidArgumentException
+
 
 ```Property::unsetParameter( key )```
 * Remove parameter (if set)
@@ -135,6 +186,7 @@ Some limitations on `Prodid` and `Version` classes.
 ```Property::getValueType()```
 * Return type of property value
 * return _null_ | _string_
+
 
 ```Property::setValueType( valueType )```
 * Set type of property value
@@ -148,12 +200,16 @@ Some limitations on `Prodid` and `Version` classes.
 * Return property value
 * return _null_ | _string_ | _array_
 
+
 ```Property::isValueSet()```
 * Return bool true if value is set
 * return _bool_
 
 ```Property::setValue( value )```
 * Set property value
+  * _ADR_ accepts seven string args, seven-element string array or SEMICOLON separated string
+  * _CLIENTPIDMAP_ accepts two int/string args, two-element int/string array or SEMICOLON separated string
+  * _N_ accepts five string args, five-element string array or SEMICOLON separated string
 * `value` _mixed_
 * return _Property_
 
@@ -164,6 +220,7 @@ Some limitations on `Prodid` and `Version` classes.
 * Return group value
 * return _null_ | _string_
 
+
 ```Property::getGroupPropName()```
 * Return group and name formatted as '_group_._name_'
 * return string
@@ -172,6 +229,7 @@ Some limitations on `Prodid` and `Version` classes.
 ```Property::isGroupSet()```
 * Return bool true if group is set
 * return _bool_
+
 
 ```Property::setgroup( value )```
 * Set property group

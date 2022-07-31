@@ -44,7 +44,7 @@ final class PhpVcardMgr implements BaseInterface
     /**
      * Constant
      */
-     public const VCARD_VERSION ='PhpVcardMgr 1.0';
+     public const PVM_VERSION ='PhpVcardMgr 1.0.7';
 
     /**
      * @var Vcard[]
@@ -126,9 +126,9 @@ final class PhpVcardMgr implements BaseInterface
      * @param null|string $version default '4.0'
      * @return bool
      */
-    public static function isVcardString( string $vcardString, ? string $version = '4.0' ) : bool
+    public static function isVcardString( string $vcardString, ? string $version = self::VERSION4 ) : bool
     {
-        static $VERSIONS = [ '4.0', '3.0'];
+        static $VERSIONS = [ self::VERSION4, self::VERSION3 ];
         return (( false !== strpos( $vcardString, self::BEGIN_VCARD )) &&
             ( false !== ( $pos = strpos( $vcardString, self::VERSION ))) &&
             in_array( $version, $VERSIONS, true ) &&
@@ -136,19 +136,19 @@ final class PhpVcardMgr implements BaseInterface
     }
 
     /**
-     * Parse vCard string into Vcards, default from vCard4 string
+     * Parse input string into Vcards, default from vCard4 string
      *
-     * @param string $vcardString
+     * @param string $inputString
      * @param null|ParserInterface $parser default Vcard4Parser
      * @return PhpVcardMgr
      * @throws Exception
      */
-    public function parse( string $vcardString, ? ParserInterface $parser = null ) : PhpVcardMgr
+    public function parse( string $inputString, ? ParserInterface $parser = null ) : PhpVcardMgr
     {
         if( null === $parser ) {
             $parser = new Vcard4Parser();
         }
-        $this->vCards = $parser->parse( $vcardString );
+        $this->vCards = $parser->parse( $inputString );
         return $this;
     }
 

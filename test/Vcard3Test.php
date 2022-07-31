@@ -176,7 +176,7 @@ END:VCARD
     public function parseTest( int $case, string $vCard3String ) : void
     {
         $this->assertTrue(
-            PhpVcardMgr::isVcardString( $vCard3String, '3.0' ),
+            PhpVcardMgr::isVcardString( $vCard3String, PhpVcardMgr::VERSION3 ),
             __FUNCTION__ . ' #1 Error in case ' . $case
         );
         $vCard3String = self::conformEols( $vCard3String );
@@ -250,7 +250,7 @@ END:VCARD
         // format vCards into Vcard3String
         $vCard3String1 = PhpVcardMgr::factory()->setVCards( $vCards )->vCard3Format();
         $this->assertTrue(
-            PhpVcardMgr::isVcardString( $vCard3String1, '3.0' ),
+            PhpVcardMgr::isVcardString( $vCard3String1, PhpVcardMgr::VERSION3 ),
             __FUNCTION__ . ' #1 Error in case '
         );
 

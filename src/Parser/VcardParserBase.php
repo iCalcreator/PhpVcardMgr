@@ -28,11 +28,10 @@ declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Parser;
 
 use Exception;
-use Kigkonsult\PhpVcardMgr\Formatter\VcardFormatterUtil;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use RuntimeException;
 
-abstract class VcardParserBase implements VcardParserInterface
+abstract class VcardParserBase extends ParserBase implements VcardParserInterface
 {
     /**
      * @inheritDoc

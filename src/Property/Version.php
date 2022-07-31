@@ -40,25 +40,21 @@ namespace Kigkonsult\PhpVcardMgr\Property;
  * VERSION-param = "VALUE=text" / any-param
  * VERSION-value = "4.0"
  */
-final class Version extends PropertyBase
+final class Version extends PropertyPV
 {
     /**
      * Class constructor
      *
+     * @override
      */
-    public function __construct() {
-        $this->value     = '4.0';
+    public function __construct(
+        ? string $value = null,
+        ? array $parameters = [],
+        ? string $valueType = null,
+        ? string $group = null
+    ) {
+        $this->value     = self::VERSION4;
         $this->valueType = self::getAcceptedValueTypes( true );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @return version
-     */
-    public static function factory() : Version
-    {
-        return new self();
     }
 
     /**
@@ -67,42 +63,5 @@ final class Version extends PropertyBase
     public function getPropName() : string
     {
         return self::VERSION;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getAcceptedParameterKeys() : array
-    {
-        return [];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function isAnyParameterAllowed() : bool
-    {
-        return false;
-    }
-
-    /**
-     * @override
-     * @param string $key
-     * @param string|array $value
-     * @return static
-     */
-    public function addParameter( string $key, $value ) : PropertyInterface
-    {
-        return $this;
-    }
-
-    /**
-     * @override
-     * @param mixed $value ignored
-     * @return static
-     */
-    public function setValue( $value ) : PropertyInterface
-    {
-        return $this;
     }
 }

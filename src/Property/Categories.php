@@ -27,6 +27,7 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
 /**
@@ -42,42 +43,6 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  */
 final class Categories extends PropertyBase
 {
-    /**
-     * Class constructor
-     *
-     * @param string|array $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Categories
-     */
-    public static function factory( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Categories
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
     /**
      * @inheritDoc
      */
@@ -112,12 +77,22 @@ final class Categories extends PropertyBase
      * @override
      * @param string|array $value
      * @return static
+     * @throws InvalidArgumentException
      */
     public function setValue( $value ) : PropertyInterface
     {
+        static $ERR = '%s expects string, got \'%s\'' ;
         switch( true ) {
             case is_array( $value ) :
                 break;
+            case ( ! is_string( $value )) :
+                throw new InvalidArgumentException(
+                    sprintf(
+                        $ERR,
+                        $this->getPropName(),
+                        var_export( $value, true )
+                    )
+                );
             case ( false !== strpos( $value, StringUtil::$COMMA )) :
                 $value = explode( StringUtil::$COMMA, $value );
                 break;
@@ -125,7 +100,7 @@ final class Categories extends PropertyBase
                 $value = [ $value ];
                 break;
         }
-        $this->value = $value;
+        $this->value = self::trimSub( $value );
         return $this;
     }
 }

@@ -55,47 +55,6 @@ namespace Kigkonsult\PhpVcardMgr\Property;
 final class Tel extends PropertyBase
 {
     /**
-     * Class constructor
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @todo other schemas ???
-     */
-    public function __construct( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        static $SCHEME_TEL = 'tel:';
-        if( empty( $valueType ) && ( 0 === stripos( $value, $SCHEME_TEL ))) {
-            $valueType = self::URI;
-        }
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Tel
-     */
-    public static function factory( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Tel
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string

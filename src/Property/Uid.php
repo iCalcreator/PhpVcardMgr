@@ -27,9 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use Exception;
-use Kigkonsult\PhpVcardMgr\Util\StringUtil;
-
 /**
  * UID
  *
@@ -52,44 +49,6 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  */
 final class Uid extends PropertyBase
 {
-    /**
-     * Class constructor
-     *
-     * @param null|string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @throws Exception
-     */
-    public function __construct( 
-        ? string $value = null,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value ?? StringUtil::getNewUid(), $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param null|string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Uid
-     * @throws Exception
-     */
-    public static function factory(
-        ? string $value = null,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Uid
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
     /**
      * @inheritDoc
      */

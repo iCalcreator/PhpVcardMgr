@@ -87,7 +87,7 @@ final class Vcard implements BaseInterface
             [
                 Version::factory(),
                 Prodid::factory(),
-                Uid::factory()
+                Uid::factory( StringUtil::getNewUid())
             ];
     }
 
@@ -102,6 +102,40 @@ final class Vcard implements BaseInterface
         return empty( $propName )
             ? count( $this->properties )
             : $this->hasProperty( $propName );
+    }
+
+    /**
+     * Return PropertyInterface[], all properties with group
+     *
+     * @param string $group
+     * @return PropertyInterface[]
+     */
+    public function getGroupProperties( string $group ) : array
+    {
+        $output = [];
+        foreach( $this->properties as $property ) {
+            if( $property->isGroupSet() && ( $group === $property->getGroup())) {
+                $output[] = $property;
+            }
+        } // end foreach
+        return $output;
+    }
+
+    /**
+     * Return array, groups
+     *
+     * @return string[]
+     */
+    public function getGroups() : array
+    {
+        $output = [];
+        foreach( $this->properties as $property ) {
+            if( $property->isGroupSet()) {
+                $group  = $property->getGroup();
+                $output[$group] = $group;
+            }
+        } // end foreach
+        return array_values( $output );
     }
 
     /**
@@ -209,6 +243,7 @@ final class Vcard implements BaseInterface
      *
      * @param PropertyInterface|PropertyInterface[] $property
      * @return Vcard
+     * @throws Exception
      */
     public function replaceProperty( $property ) : Vcard
     {
@@ -307,9 +342,16 @@ final class Vcard implements BaseInterface
     {
         $props = [];
         foreach( $this->properties as $property ) {
-            $keyName = StringUtil::isXprefixed( $property->getPropName() )
-                ? self::XPREFIX
-                : $property->getGroupPropName();
+            switch( true ) {
+                case $property->isGroupSet() :
+                    $keyName = $property->getGroup();
+                    break;
+                case StringUtil::isXprefixed( $property->getPropName()) :
+                    $keyName = self::XPREFIX;
+                    break;
+                default :
+                    $keyName = $property->getPropName();
+            }
             if( ! isset( $props[$keyName] )) {
                 $props[$keyName] = [];
             }
@@ -332,10 +374,21 @@ final class Vcard implements BaseInterface
      */
     private static function propSorter( PropertyInterface $a, PropertyInterface $b ) : int
     {
+        $aGroup = $a->getGroup() ?? StringUtil::$SP0;
+        $bGroup = $b->getGroup() ?? StringUtil::$SP0;
+        if( $aGroup < $bGroup ) {
+            return -1;
+        }
+        if( $aGroup > $bGroup ) {
+            return 1;
+        }
         $aName    = $a->getPropName();
         $bName    = $b->getPropName();
-        if( $aName !== $bName ) {
-            return 0;
+        if( $aName < $bName ) {
+            return -1;
+        }
+        if( $aName > $bName ) {
+            return 1;
         }
         if( 0 === ((int) $aPref = $a->getParameters( $a::PREF ))) {
             $aPref = PHP_INT_MAX;

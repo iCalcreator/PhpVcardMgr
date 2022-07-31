@@ -27,6 +27,9 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use InvalidArgumentException;
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
+
 /**
  * N
  *
@@ -60,85 +63,6 @@ final class N extends PropertyBase
     ];
 
     /**
-     * Class constructor
-     *
-     * @param string|array $familyNames  or a 5-items array
-     * @param null|string|array $givenNames
-     * @param null|string $additionalNames
-     * @param null|string $namePrefixes
-     * @param null|string $nameSuffixes
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct(
-        $familyNames,
-        $givenNames = null,
-        ? string $additionalNames = null,
-        ? string $namePrefixes = null,
-        ? string $nameSuffixes = null,
-        ? array  $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) {
-        if( is_array( $familyNames ) & ( 5 === count( $familyNames ))) {
-            $parameters = is_array( $givenNames ) ? $givenNames : [];
-            $valueType  = $additionalNames;
-            $group      = $namePrefixes;
-            [ $familyNames2, $givenNames, $additionalNames, $namePrefixes, $nameSuffixes ] = $familyNames;
-            $familyNames = $familyNames2;
-        }
-        $this->populate(
-            [
-                $familyNames,
-                $givenNames,
-                $additionalNames,
-                $namePrefixes,
-                $nameSuffixes
-            ],
-            $parameters,
-            $valueType,
-            $group
-        );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $familyNames  or a 5-items array
-     * @param null|string|array $givenNames
-     * @param null|string $additionalNames
-     * @param null|string $namePrefixes
-     * @param null|string $nameSuffixes
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return N
-     */
-    public static function factory(
-        $familyNames,
-        $givenNames = null,
-        ? string $additionalNames = null,
-        ? string $namePrefixes = null,
-        ? string $nameSuffixes = null,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) : N
-    {
-        return new self(
-            $familyNames,
-            $givenNames,
-            $additionalNames,
-            $namePrefixes,
-            $nameSuffixes,
-            $parameters,
-            $valueType,
-            $group
-        );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string
@@ -165,5 +89,51 @@ final class N extends PropertyBase
     public static function isAnyParameterAllowed() : bool
     {
         return true;
+    }
+
+    /**
+     * @override
+     * @param string|array $value  string (surname) or a 5-items array
+     * @param null|string|array $givenNames
+     * @param null|string $additionalNames
+     * @param null|string $namePrefixes
+     * @param null|string $nameSuffixes
+     * @return PropertyInterface
+     */
+    public function setValue(
+        $value,
+        ? string $givenNames = null,
+        ? string $additionalNames = null,
+        ? string $namePrefixes = null,
+        ? string $nameSuffixes = null
+    ) : PropertyInterface
+    {
+        static $ERR = 'N expects surname/given/additional/prefix/suffix, got ' ;
+        switch( true ) {
+            case ( is_string( $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) :
+                $value = explode( StringUtil::$SEMIC, $value );
+                // fall through
+            case is_array( $value ) :
+                $arrCnt = count( $value );
+                switch( true ) {
+                    case ( 5 === $arrCnt ) :
+                        break;
+                    case ( 5 > $arrCnt ) :
+                        $value = array_pad( $value, 5, StringUtil::$SP0 );
+                        break;
+                    default :
+                        throw new InvalidArgumentException( $ERR . var_export( $value, true ));
+                } // end switch
+                break;
+            default :
+                $value = [ $value, $givenNames, $additionalNames, $namePrefixes, $nameSuffixes ];
+                break;
+        } // end switch
+        $value = self::trimSub( $value );
+        if( empty( implode( $value ))) {
+            throw new InvalidArgumentException( $ERR . var_export( $value, true ));
+        }
+        $this->value = $value;
+        return $this;
     }
 }

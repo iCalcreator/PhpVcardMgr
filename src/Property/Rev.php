@@ -45,44 +45,6 @@ use Kigkonsult\PhpVcardMgr\Util\DateUtil;
 final class Rev extends PropertyBase
 {
     /**
-     * Class constructor
-     *
-     * @param string|DateTime $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @throws Exception
-     */
-    public function __construct(
-        $value,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|DateTime $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Rev
-     * @throws Exception
-     */
-    public static function factory(
-        $value,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) : Rev
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string

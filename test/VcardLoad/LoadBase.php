@@ -131,7 +131,9 @@ abstract class LoadBase implements BaseInterface
                     $parameters[self::CALSCALE] = 'gregorian';
                     break;
                 case self::SORT_AS :
-                    $parameters[self::SORT_AS] = $faker->words( 2, true );
+                    $parameters[self::SORT_AS] = $faker->boolean
+                        ? $faker->words( 2 )
+                        : $faker->words( 2, true );
                     break;
                 case self::GEO :
                     $faker->addProvider( new SchemaURI( $faker ));

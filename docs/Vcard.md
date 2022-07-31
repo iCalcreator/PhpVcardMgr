@@ -26,6 +26,18 @@ For base definition of Vcard and properties, please explore [rfc6350].
 * `propName` string
 * return bool | int
 
+
+```Vcard::getGroups()```
+* Return all property groups
+* Return _string[]_
+
+
+```Vcard::getGroupProperties( group )```
+* Return all properties in group
+* `group` _string_
+* Return _PropertyInterface[]_
+
+
 ```Vcard::getProperties( [ propName [, valuesOnly [, typeValue ]]] )```
 * Return mixed | array, all properties or spec propNamed ones, opt only property values
 * propName _ANNIVERSARY_, _BDAY_, _GENDER_, _N_, _PRODID_, _REV_, _UID_, _VERSION_ or _X-_ prop 
@@ -36,21 +48,31 @@ For base definition of Vcard and properties, please explore [rfc6350].
 * `typeValue` _string_, only properties with TYPE=typeValue returned
 * Return _mixed_ | _PropertyInterface_ | _PropertyInterface[]_
 
-```Vcard::hasProperty( propName [, typeValue ] )```
-* Return bool false if propName property \[with type] not exists, otherwise count of propNamed \[with type] properties
+
+```Vcard::getGroupProperties( group )```
+* Return all properties in group
+* `group` _string_
+* Return _PropertyInterface[]_
+
+
+* ```Vcard::hasProperty( propName [, typeValue ] )```
+* Return bool false if propName property \[opt with type] not exists, otherwise count of propNamed \[with type] properties
 * `propName` _string_
 * `typeValue` _string_
 * Return _bool_ | _int_
+
 
 ```Vcard::removeProperty( [ propName ] )```
 * Remove all properties or spec propNamed ones
 * `propName` _string_
 * Return _Vcard_
 
+
 ```Vcard::replaceProperty( property )```
 * Replace property/properties,<br>single property input will replace ALL opt existing ones
 * `property` _PropertyInterface_ | _PropertyInterface[]_
 * Return _Vcard_
+
 
 ```Vcard::addProperty( property )```
 * Add property to collection, last in chain
@@ -58,6 +80,7 @@ For base definition of Vcard and properties, please explore [rfc6350].
   adding a second will replace the first
 * `property` _PropertyInterface_
 * Return _Vcard_
+
 
 ```Vcard::setProperties( properties )```
 * Add properties to collection

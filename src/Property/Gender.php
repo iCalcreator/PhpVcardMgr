@@ -55,42 +55,6 @@ final class Gender extends PropertyBase
     ];
 
     /**
-     * Class constructor
-     *
-     * @param string|array $value             sex [";" text]
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Gender
-     */
-    public static function factory( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Gender
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string
@@ -137,13 +101,14 @@ final class Gender extends PropertyBase
             case ! is_string( $value ) :
                 throw new InvalidArgumentException( sprintf( $ERR, var_export( $value, true )));
             case ( false !== strpos( $value, StringUtil::$SEMIC )) :
-                $value = explode( StringUtil::$SEMIC, $value, 2 );
+                $value = StringUtil::semicSplit( $value, 2 );
                 break;
             default :
                 $value = [ $value ];
                 break;
         }
-        $value         = self::trimSub( $value );
+        $value[0] = strtoupper( $value[0] );
+        $value    = self::trimSub( $value );
         if( ! in_array( $value[0], $EXPECTED, true )) {
             throw new InvalidArgumentException( sprintf( $ERR, var_export( $value[0], true )));
         }

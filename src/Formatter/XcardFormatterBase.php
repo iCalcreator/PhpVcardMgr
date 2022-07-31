@@ -65,7 +65,7 @@ abstract class XcardFormatterBase implements FormatterInterface
      * @param null|XMLWriter $writer
      * @return static
      */
-    public static function factory( XMLWriter $writer )
+    public static function factory( ? XMLWriter $writer ) : XcardFormatterBase
     {
         return new static( $writer );
     }
@@ -81,15 +81,10 @@ abstract class XcardFormatterBase implements FormatterInterface
      * @param string    $elementName
      * @param mixed     $value
      */
-    protected function writeTextElement( string $elementName, $value = null ) : void
+    protected function writeTextElement( string $elementName, $value ) : void
     {
-        if( null !== $value ) {
-            $this->writer->startElement( $elementName );
-            $this->writer->text( $value );
-            $this->writer->endElement();
-        }
-        else {
-            $this->writer->writeElement( $elementName );
-        }
+        $this->writer->startElement( $elementName );
+        $this->writer->text((string) $value );
+        $this->writer->endElement();
     }
 }

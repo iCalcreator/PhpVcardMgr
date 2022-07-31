@@ -47,42 +47,46 @@ final class Xprop extends PropertyBase
     /**
      * Class constructor
      *
-     * @param string $propName
-     * @param string $value
+     * @param null|string $propName
+     * @param null|string $value
      * @param null|array $parameters
      * @param null|string $valueType
      * @param null|string $group
      */
     public function __construct(
-        string $propName,
-        string $value,
+        ? string $propName = null,
+        ? string $value = null,
         ? array $parameters = [],
         ? string $valueType = null,
         ? string $group = null
     ) {
-        $this->setPropName( $propName );
-        $this->populate( $value, $parameters, $valueType, $group );
+        if( null !== $propName ) {
+            $this->setPropName( $propName );
+        }
+        parent::__construct( $value, $parameters, $valueType, $group );
     }
 
     /**
      * Class factory method
      *
-     * @param string $name
-     * @param string $value
+     * Note, 'parent'::factory() method invoke results in a Xprop class instance WITHOUT propName !!
+     *
+     * @param null|string $propName
+     * @param null|string $value
      * @param null|array $parameters
      * @param null|string $valueType
      * @param null|string $group
      * @return Xprop
      */
-    public static function factory(
-        string $name,
-        string $value,
+    public static function factoryX(
+        ? string $propName = null,
+        ? string $value = null,
         ? array $parameters = [],
         ? string $valueType = null,
         ? string $group = null
     ) : Xprop
     {
-        return new self( $name, $value, $parameters, $valueType, $group );
+        return new self( $propName, $value, $parameters, $valueType, $group );
     }
 
     /**

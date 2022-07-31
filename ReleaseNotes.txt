@@ -1,0 +1,8 @@
+
+1.0.1 JcardParser::prepParameters eol-upd
+1.0.2 code trim
+1.0.3 xCard group bug
+1.0.4 xCard XML property bug
+1.0.5 XcardParser::parse() DomNode export removed
+1.0.6 Vcard Property class structure rebuild
+1.0.7 Format classes structure/logic rebuild

@@ -32,7 +32,7 @@ use XMLReader;
 /**
  * Class XcardParserBase
  */
-abstract class XcardParserBase implements ParserInterface
+abstract class XcardParserBase extends ParserBase implements ParserInterface
 {
     /**
      * XCard Properties : constants
@@ -98,7 +98,7 @@ abstract class XcardParserBase implements ParserInterface
      * @param null|XMLReader $reader
      * @return static
      */
-    public static function factory( ? XMLReader $reader = null  )
+    public static function factory( ? XMLReader $reader = null  ) : XcardParserBase
     {
         return new static( $reader );
     }

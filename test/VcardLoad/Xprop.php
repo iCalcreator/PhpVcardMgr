@@ -47,7 +47,7 @@ final class Xprop extends LoadBase
     {
         $faker     = Faker\Factory::create();
         $valueType = $faker->randomElement( Dto::getAcceptedValueTypes());
-        return Dto::factory(
+        return Dto::factoryX(
             self::XPREFIX . strtoupper( $faker->word()),
             $faker->words( 6, true ),
             self::loadParameters( Dto::getAcceptedParameterKeys(), $valueType, Dto::isAnyParameterAllowed()),

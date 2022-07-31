@@ -174,7 +174,6 @@ class DateUtil implements BaseInterface
      */
     public static function convertVcard2JcardTime( string $value ) : string
     {
-        $zone1  = [ self::$Z, self::$PLUS, self::$MINUS ];
         $value  = trim( $value);
         $strlen = strlen( $value );
         $zone   = StringUtil::$SP0;
@@ -184,7 +183,10 @@ class DateUtil implements BaseInterface
                 ctype_digit( substr( $value, 2, 2 ))) :
                 // case 3
                 if( 4 < $strlen ) {
-                    $zone = self::convertVcard2JcardZone( substr( $value, 4 ));
+                    $zone = substr( $value, 4 );
+                    if( self::isVcardZone( $zone )) {
+                        $zone = self::convertVcard2JcardZone( $zone );
+                    }
                 }
                 return substr( $value, 0, 4 ) . $zone;
             case (( 3 <= $strlen ) &&
@@ -195,37 +197,46 @@ class DateUtil implements BaseInterface
                 if( 3 < $strlen ) {
                     if( ctype_digit( substr( $value, 3, 2 ))) {
                         $output .= StringUtil::$COLON . substr( $value, 3, 2 ); // min
-                        $output .= (( 5 < $strlen ) && in_array( $value[5], $zone1, true ))
+                        $output .= (( 5 < $strlen ) && self::isVcardZone( substr( $value, 5 )))
                             ? self::convertVcard2JcardZone( substr( $value, 5 ))
                             : StringUtil::$SP0;
                     }
-                    elseif( in_array( $value[3], $zone1, true )) {
+                    elseif( self::isVcardZone( substr( $value, 3 ))) {
                         $output .= self::convertVcard2JcardZone( substr( $value, 3 ));
                     }
                 }
                 return $output;
             case (( 6 <= $strlen ) &&
                 ctype_digit( substr( $value, 0, 6 ))) :
-                // case 1, HHMMSS
+                // case 1, HHMMSS[zone]
                 if( 6 < $strlen ) {
                     $zone = substr( $value, 6 );
+                    if( ! self::isVcardZone( $zone )) {
+                        break;
+                    }
                 }
                 return substr( $value, 0, 2 ) . StringUtil::$COLON .
                     substr( $value, 2, 2 ) . StringUtil::$COLON .
                     substr( $value, 4, 2 ) . self::convertVcard2JcardZone( $zone );
             case (( 4 <= $strlen ) &&
                 ctype_digit( substr( $value, 0, 4 ))) :
-                // case 1, HHMM
+                // case 1, HHMM[zone]
                 if( 4 < $strlen ) {
                     $zone = substr( $value, 4 );
+                    if( ! self::isVcardZone( $zone )) {
+                        break;
+                    }
                 }
                 return substr( $value, 0, 2 ) . StringUtil::$COLON .
                     substr( $value, 2, 2 ) . self::convertVcard2JcardZone( $zone );
             case (( 2 <= $strlen ) &&
                 ctype_digit( substr( $value, 0, 2 ))) :
-                // case 1, HH
+                // case 1, HH[zone]
                 if( 2 < $strlen ) {
                     $zone = substr( $value, 2 );
+                    if( ! self::isVcardZone( $zone )) {
+                        break;
+                    }
                 }
                 return substr( $value, 0, 2 ) . self::convertVcard2JcardZone( $zone );
         } // end switch
@@ -712,9 +723,6 @@ class DateUtil implements BaseInterface
                 && ctype_digit( substr( $value, 5 ))) :
                 // case 2, year-month exists but no day
                 $year  = (int) substr( $value, 0,4 );
-                if( ! checkdate( 1, 1, $year )) {
-                    return false;
-                }
                 $value = substr( $value, 5 );
                 break;
             case (( 4 > $strlen ) ||
@@ -723,9 +731,6 @@ class DateUtil implements BaseInterface
             default :
                 // case 1, test year
                 $year = (int) substr( $value, 0, 4 );
-                if( ! checkdate( 1, 1, $year )) {
-                    return false;
-                }
                 $value = substr( $value, 4 );
                 if( empty( $value )) {
                     return true;
@@ -745,9 +750,7 @@ class DateUtil implements BaseInterface
             return false;
         }
         $day = (int) substr( $value, 0, 2 );
-        return empty( $year )
-            ? (( 1 <= $day ) && ( $day <= 31 ))
-            : checkdate( $month, $day, $year );
+        return checkdate( $month, $day, $year );
     }
 
     /**

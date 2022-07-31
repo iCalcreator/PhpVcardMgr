@@ -29,6 +29,7 @@ namespace Kigkonsult\PhpVcardMgr\VcardLoad;
 
 use Faker;
 use Kigkonsult\PhpVcardMgr\Property\Org as Dto;
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
 /**
  * ORG
@@ -52,8 +53,9 @@ final class Org extends LoadBase
     {
         $faker     = Faker\Factory::create();
         $valueType = $faker->randomElement( Dto::getAcceptedValueTypes());
+        $orgDef    = [ $faker->company(), $faker->company() ];
         return Dto::factory(
-            $faker->company() . ',' . $faker->company(),
+            ( $faker->boolean ?  implode( StringUtil::$COMMA, $orgDef ) : $orgDef ),
             self::loadParameters( Dto::getAcceptedParameterKeys(), $valueType, Dto::isAnyParameterAllowed()),
             $valueType
         );

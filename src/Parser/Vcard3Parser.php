@@ -28,40 +28,18 @@ declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Parser;
 
 use Exception;
-use Kigkonsult\PhpVcardMgr\Property\Adr;
 use Kigkonsult\PhpVcardMgr\Property\Anniversary;
-use Kigkonsult\PhpVcardMgr\Property\Bday;
 use Kigkonsult\PhpVcardMgr\Property\CalAdrUri;
 use Kigkonsult\PhpVcardMgr\Property\CalUri;
-use Kigkonsult\PhpVcardMgr\Property\Categories;
 use Kigkonsult\PhpVcardMgr\Property\ClientPidMap;
-use Kigkonsult\PhpVcardMgr\Property\Email;
 use Kigkonsult\PhpVcardMgr\Property\Fburl;
-use Kigkonsult\PhpVcardMgr\Property\FullName;
 use Kigkonsult\PhpVcardMgr\Property\Gender;
-use Kigkonsult\PhpVcardMgr\Property\Geo;
 use Kigkonsult\PhpVcardMgr\Property\Impp;
-use Kigkonsult\PhpVcardMgr\Property\Key;
 use Kigkonsult\PhpVcardMgr\Property\Kind;
 use Kigkonsult\PhpVcardMgr\Property\Lang;
-use Kigkonsult\PhpVcardMgr\Property\Logo;
 use Kigkonsult\PhpVcardMgr\Property\Member;
-use Kigkonsult\PhpVcardMgr\Property\N;
-use Kigkonsult\PhpVcardMgr\Property\Nickname;
-use Kigkonsult\PhpVcardMgr\Property\Note;
-use Kigkonsult\PhpVcardMgr\Property\Org;
-use Kigkonsult\PhpVcardMgr\Property\Photo;
 use Kigkonsult\PhpVcardMgr\Property\PropertyInterface;
 use Kigkonsult\PhpVcardMgr\Property\Related;
-use Kigkonsult\PhpVcardMgr\Property\Rev;
-use Kigkonsult\PhpVcardMgr\Property\Role;
-use Kigkonsult\PhpVcardMgr\Property\Sound;
-use Kigkonsult\PhpVcardMgr\Property\Source;
-use Kigkonsult\PhpVcardMgr\Property\Tel;
-use Kigkonsult\PhpVcardMgr\Property\Title;
-use Kigkonsult\PhpVcardMgr\Property\Tz;
-use Kigkonsult\PhpVcardMgr\Property\Uid;
-use Kigkonsult\PhpVcardMgr\Property\Url;
 use Kigkonsult\PhpVcardMgr\Property\Xml;
 use Kigkonsult\PhpVcardMgr\Property\Xprop;
 use Kigkonsult\PhpVcardMgr\Util\DateUtil;
@@ -72,11 +50,6 @@ use RuntimeException;
 class Vcard3Parser extends VcardParserBase
 {
     /**
-     * @var string
-     */
-    private static $ENCODING   = 'ENCODING';
-
-    /**
      * @param string[] $vCardRows
      * @return Vcard
      * @throws Exception
@@ -84,8 +57,7 @@ class Vcard3Parser extends VcardParserBase
      */
     public function vCardParse( array $vCardRows ) : Vcard
     {
-        static $VERSIONno  = '3.0';
-        static $ERR        = 'VERSION not 3.0, got ';
+        static $ERR        = 'expect VERSION 3.0, got ';
         static $PROFILE    = 'PROFILE';
         static $SORTSTRING = 'SORT-STRING';
         static $TRIMCHARS  = "\x00..\x1F";
@@ -96,93 +68,74 @@ class Vcard3Parser extends VcardParserBase
         foreach( $rows as $rix => $row ) {
             /* separate property name  and  opt.params and value */
             [ $group, $propName, $row ] = self::getPropName( $row );
-                    /* separate parameters from value */
+            $property   = self::newProperty( $propName );
+            if( ! empty( $group )) {
+                $property->setGroup( $group );
+            }
+            /* separate parameters from value */
             [ $value, $parameters ] = self::splitContent( $row );
             $parameters = self::prepParameters( $parameters );
-            if( isset( $parameters[self::VALUE] ) && ( self::TEXT === $parameters[self::VALUE] )) {
+            $valueType = $parameters[self::VALUE] ?? $property::getAcceptedValueTypes( true );
+            $property->setParameters( $parameters );
+            $property->setValueType( $valueType );
+            if(( isset( $parameters[self::VALUE] ) && ( self::TEXT === $parameters[self::VALUE] )) ||
+                ( self::TEXT === $valueType )) {
                 $value = self::strunrep( rtrim( $value, $TRIMCHARS ));
             }
             switch( $propName ) {
                 case self::VERSION :
-                    if( $VERSIONno !== $value ) {
+                    if( self::VERSION3 !== $value ) {
                         throw new RuntimeException( $ERR . var_export( $value, true ));
                     }               // fall through
                 case self::PRODID : // fall through
                 case $PROFILE :
                     continue 2;
-                case self::ADR :
-                    $property = self::processAdr( $value, $parameters, $group );
-                    break;
-                case self::BDAY :
-                    $property = self::processBday( $value, $parameters, $group );
-                    break;
-                case self::CATEGORIES :
-                    $property = Categories::factory( $value, $parameters, null, $group );
-                    break;
-                case self::EMAIL :
-                    $property = Email::factory( $value, $parameters, null, $group );
-                    break;
-                case self::FN :
-                    $property = FullName::factory( $value, $parameters, null, $group );
-                    break;
-                case self::GEO :
-                    $property = self::processGeo( $value, $parameters, $group );
-                    break;
-                case self::KEY :
-                    $property = self::processKey( $value, $parameters, $group );
-                    break;
-                case self::LOGO :
-                    $property = self::processLogo( $value, $parameters, $group );
-                    break;
-                case self::N :
-                    $property = self::processN( $value, $parameters, $group );
-                    $nIx = $rix;
-                    break;
-                case self::NICKNAME :
-                    $property = Nickname::factory( StringUtil::unEscapeComma( $value ), $parameters, null, $group );
-                    break;
-                case self::NOTE :
-                    $property = Note::factory( $value, $parameters, null, $group );
-                    break;
-                case self::ORG :
-                    $property = Org::factory( StringUtil::unEscapeComma( $value ), $parameters, null, $group );
-                    break;
-                case self::PHOTO :
-                    $property = self::processPhoto( $value, $parameters, $group );
-                    break;
-                case self::REV :
-                    $property = self::processRev( $value, $parameters, $group );
-                    break;
-                case self::ROLE :
-                    $property = Role::factory( $value, $parameters, null, $group );
-                    break;
                 case $SORTSTRING :
                     $sortAs = $value;
                     continue 2;
-                case self::SOUND :
-                    $property = self::processSound( $value, $parameters, $group );
+                case self::ADR :
+                case self::CATEGORIES : // fall through
+                case self::EMAIL :      // fall through
+                case self::FN :         // fall through
+                case self::NICKNAME :   // fall through
+                case self::NOTE :       // fall through
+                case self::ORG :        // fall through
+                case self::ROLE :       // fall through
+                case self::SOURCE :     // fall through
+                case self::TEL :        // fall through
+                case self::TITLE :      // fall through
+                case self::URL :
+                    $property->setValue( $value );
                     break;
-                case self::SOURCE :
-                    $valueType = self::URI;
-                    $property  = Source::factory( $value, $parameters, $valueType, $group );
+                case self::N :
+                    $property->setValue( $value );
+                    $nIx = $rix;
                     break;
-                case self::TEL :
-                    $property = Tel::factory( $value, $parameters, null, $group );
+                case self::BDAY :
+                    self::processBday( $property, $value );
                     break;
-                case self::TITLE :
-                    $property = Title::factory( $value, $parameters, null, $group );
+                case self::GEO :
+                    self::processGeo( $property, $value );
+                    break;
+                case self::KEY :
+                    self::processKey( $property, $value );
+                    break;
+                case self::LOGO :  // fall through
+                case self::PHOTO : // fall through
+                case self::SOUND : // fall through
+                case self::UID :   // fall through
+                    self::processUri( $property, $value );
+                    break;
+
+                case self::REV :
+                    self::processRev( $property, $value );
                     break;
                 case self::TZ :
-                    $property = self::processTz( $value, $parameters, $group );
+                    self::processTz( $property, $value );
                     break;
-                case self::UID :
-                    $property = self::processUid( $value, $parameters, $group );
-                    break;
-                case self::URL :
-                    $property = Url::factory( $value, $parameters, null, $group );
-                    break;
+
                 default :
-                    $property = self::processXprop( $propName, $value, $parameters, $group );
+                    $property = self::processXprop( $property, $propName, $value );
                     break;
             } // end switch
             $properties[$rix] = $property;
@@ -203,31 +156,9 @@ class Vcard3Parser extends VcardParserBase
      */
     private static function prepParameters( array $parameters ) : array
     {
-        $parameters = array_change_key_case( $parameters, CASE_UPPER );
-        static $specPkeys = [
-            'CHARSET',
-            'CONTEXT',
-            'ENCODING',
-        ];
-        foreach( $specPkeys as $specPkey ) {
-            if( ! isset( $parameters[$specPkey] )) {
-                continue;
-            }
-            $parameters[self::XPREFIX . $specPkey] = $parameters[$specPkey];
-            unset( $parameters[$specPkey] );
-        } // end foreach
-        return $parameters;
-    }
-
-    /**
-     * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Adr
-     */
-    private static function processAdr( string $value, ? array $parameters = [], ? string $group = null ) : Adr
-    {
+        static $specPkeys  = [ 'CHARSET', 'CONTEXT', 'ENCODING' ];   // Vcard3 param keys only
         static $ADRNOTYPES = [ 'intl', 'dom', 'postal', 'parcel' ]; // Vcard3 types only
+        $parameters = array_change_key_case( $parameters, CASE_UPPER );
         if( isset( $parameters[self::TYPE] )) {
             $types = explode( StringUtil::$COMMA, $parameters[self::TYPE] );
             foreach( $types as $tix => $type ) {
@@ -242,135 +173,102 @@ class Vcard3Parser extends VcardParserBase
                 $parameters[self::TYPE] = implode( StringUtil::$COMMA, $types );
             }
         } // end if
-        return Adr::factory( StringUtil::semicSplit( $value, 7 ), $parameters, null, $group );
+        foreach( $specPkeys as $specPkey ) {
+            if( ! isset( $parameters[$specPkey] )) {
+                continue;
+            }
+            $parameters[self::XPREFIX . $specPkey] = $parameters[$specPkey];
+            unset( $parameters[$specPkey] );
+        } // end foreach
+        return $parameters;
     }
 
     /**
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Bday
+     * @return void
      */
-    private static function processBday( string $value, ? array $parameters = [], ? string $group = null ) : Bday
+    private static function processBday( PropertyInterface $property, string $value ) : void
     {
         $value = trim( str_replace( [ DateUtil::$DS1, StringUtil::$COLON ], StringUtil::$SP0, $value ));
-        $hasParameterValue = isset( $parameters[self::VALUE] );
+        $hasParameterValue = $property->hasValueParameter();
         switch( true ) {
-            case ( $hasParameterValue && ( self::DATE === $parameters[self::VALUE] )) ;
-                $valueType = self::DATE;
+            case ( $hasParameterValue && ( self::DATE === $property->getParameters( self::VALUE ))) :
+                $property->setValueType( self::DATE );
                 break;
-            case ( $hasParameterValue && ( self::DATETIME === $parameters[self::VALUE] )) ;
-                $valueType = self::DATETIME;
+            case ( $hasParameterValue && ( self::DATETIME === $property->getParameters( self::VALUE ))) :
+                $property->setValueType( self::DATETIME );
                 break;
             case (( 8 === strlen( $value )) && DateUtil::isVcardDate( $value )) :
-                $parameters[self::VALUE] = $valueType = self::DATE;
+                $property->addParameter( self::VALUE, self::DATE )
+                    ->setValueType( self::DATE );
                 break;
             default :
-                $parameters[self::VALUE] = $valueType = self::DATETIME;
+                $property->addParameter( self::VALUE, self::DATETIME )
+                    ->setValueType( self::DATETIME );
                 break;
         } // end switch
-        return Bday::factory( $value, $parameters, $valueType, $group );
+        $property->setValue( $value );
     }
 
     /**
      * A single structured value consisting of two float values separated by the SEMI-COLON character
      *
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Geo
+     * @return void
      */
-    private static function processGeo( string $value, ? array $parameters = [], ? string $group = null ) : Geo
+    private static function processGeo( PropertyInterface $property, string $value ) : void
     {
         static $GEOprefix = 'geo:';
         if( false !== strpos( $value, StringUtil::$SEMIC )) {
             $value = $GEOprefix . implode( StringUtil::$COMMA, explode( StringUtil::$SEMIC, $value ));
         }
-        return Geo::factory( $value, $parameters, null, $group );
+        $property->setValue( $value );
     }
 
     /**
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Key
+     * @return void
      */
-    private static function processKey( string $value, ? array $parameters = [], ? string $group = null ) : Key
+    private static function processKey( PropertyInterface $property, string $value ) : void
     {
-        $valueType = ( isset( $parameters[self::VALUE] ) && ( self::TEXT === $parameters[self::VALUE] ))
+        $valueType = ( $property->hasValueParameter() &&
+            ( self::TEXT === $property->getParameters( self::VALUE )))
             ? self::TEXT
             : self::URI;
-        unset( $parameters[self::$ENCODING] );
-        return Key::factory( $value, $parameters, $valueType, $group );
+        $property->setValueType( $valueType )
+            ->setValue( $value );
     }
 
     /**
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Logo
+     * @return void
      */
-    private static function processLogo( string $value, ? array $parameters = [], ? string $group = null ) : Logo
+    private static function processUri( PropertyInterface $property, string $value ) : void
     {
-        $valueType = self::URI; // the only one allowed
-        unset( $parameters[self::$ENCODING] );
-        return Logo::factory( $value, $parameters, $valueType, $group );
+        $property->setValueType( self::URI ) // the only one allowed
+            ->setValue( $value );
     }
 
     /**
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return N
-     */
-    private static function processN( string $value, ? array $parameters = [], ? string $group = null ) : N
-    {
-        return N::factory( StringUtil::semicSplit( $value, 5 ), $parameters, null, $group );
-    }
-
-    /**
-     * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Photo
-     */
-    private static function processPhoto( string $value, ? array $parameters = [], ? string $group = null ) : Photo
-    {
-        $valueType = self::URI; // the only one allowed
-        unset( $parameters[self::$ENCODING] );
-        return Photo::factory( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * @param string $value
-     * @param array|null $parameters
-     * @param string|null $group
-     * @return Rev
+     * @return void
      * @throws Exception
      */
-    private static function processRev( string $value, ? array $parameters = [], ? string $group = null ) : Rev
+    private static function processRev( PropertyInterface $property, string $value ) : void
     {
         static $DATEHISSFX = 'T000000';
         $value      = str_replace( [ DateUtil::$DS1, StringUtil::$COLON ], StringUtil::$SP0, $value );
         if( DateUtil::isVcardDate( $value ) && ! DateUtil::isVcardDateTime( $value )) {
             $value .= $DATEHISSFX;
         }
-        unset($parameters[self::VALUE] );
-        $valueType  = self::TIMESTAMP;
-        return Rev::factory( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Sound
-     */
-    private static function processSound( string $value, ? array $parameters = [], ? string $group = null ) : Sound
-    {
-        $valueType = self::URI;
-        unset( $parameters[self::$ENCODING], $parameters[self::VALUE] );
-        return Sound::factory( $value, $parameters, $valueType, $group );
+        $property->unsetParameter( self::VALUE )
+            ->setValueType( self::TIMESTAMP )
+            ->setValue( $value );
     }
 
     /**
@@ -381,107 +279,88 @@ class Vcard3Parser extends VcardParserBase
      * The default is a single text value.
      * It can also be reset to a single URI or utc-offset value.
      *
+     * @param PropertyInterface $property
      * @param string $value
-     * @param array|null   $parameters
-     * @param string|null  $group
-     * @return Tz
+     * @return void
      */
-    private static function processTz( string $value, ? array $parameters = [], ? string $group = null ) : Tz
+    private static function processTz( PropertyInterface $property, string $value ) : void
     {
-        $hasParameterValue = isset( $parameters[self::VALUE] );
-        if( ! $hasParameterValue &&
-            DateUtil::isJcardZone( $value )) {
-            $parameters[self::VALUE] = $valueType = self::UTCOFFSET;
+        $hasParameterValue = $property->hasValueParameter();
+        if( ! $hasParameterValue && DateUtil::isJcardZone( $value )) {
+            $property->addParameter( self::VALUE, self::UTCOFFSET )
+                ->setValueType( self::UTCOFFSET );
         }
         elseif( ! $hasParameterValue ) {
-            $parameters[self::VALUE] = $valueType = self::TEXT;
+            $property->addParameter( self::VALUE, self::TEXT )
+                ->setValueType( self::TEXT );
         }
         else {
-            $valueType = $parameters[self::VALUE];
+            $property->setValueType( $property->getParameters( self::VALUE ));
         }
-        if(( self::UTCOFFSET === $parameters[self::VALUE] ) &&
+        if(( self::UTCOFFSET === $property->getParameters( self::VALUE )) &&
             ( false !== strpos( $value, StringUtil::$COLON ))) {
             $value = str_replace( StringUtil::$COLON, StringUtil::$SP0, $value  );
         }
-        return Tz::factory( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * @param string $value
-     * @param array|null $parameters
-     * @param string|null $group
-     * @return Uid
-     * @throws Exception
-     */
-    private static function processUid( string $value, ? array $parameters = [], ? string $group = null ) : Uid
-    {
-        $parameters[self::VALUE] = $valueType = self::URI;
-        return Uid::factory( $value, $parameters, $valueType, $group );
+        $property->setValue( $value );
     }
 
     /**
      * Process Vcard3 X-props, first looking for Vcard4-unique ones
      *
+     * @param PropertyInterface $property   an Xprop with propName 'X-'
      * @param string      $propName
      * @param string      $value
-     * @param array|null  $parameters
-     * @param string|null $group
      * @return PropertyInterface
      */
     private static function processXprop(
+        PropertyInterface $property,
         string $propName,
-        string $value,
-        ? array $parameters = [],
-        ? string $group = null
+        string $value
     ) : PropertyInterface
     {
         switch( substr( $propName, 2 ) ) {
             case self::ANNIVERSARY :
-                return Anniversary::factory( $value, $parameters, null, $group );
+                return Anniversary::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::CALADRURI :
-                return CalAdrUri::factory( $value, $parameters, null, $group );
+                return CalAdrUri::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::CALURI :
-                return CalUri::factory( $value, $parameters, null, $group );
+                return CalUri::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::CLIENTPIDMAP :
-                return ClientPidMap::factory( $value, $parameters, null, $group );
+                return ClientPidMap::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::FBURL :
-                return Fburl::factory( $value, $parameters, null, $group );
+                return Fburl::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::GENDER :
-                return Gender::factory( $value, $parameters, null, $group );
+                return Gender::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::IMPP :
-                return Impp::factory( $value, $parameters, null, $group );
+                return Impp::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::KIND :
-                return Kind::factory( $value, $parameters, null, $group );
+                return Kind::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::LANG :
-                return Lang::factory( $value, $parameters, null, $group );
+                return Lang::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::MEMBER :
-                return Member::factory( $value, $parameters, null, $group );
+                return Member::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::RELATED :
-                return Related::factory( $value, $parameters, null, $group );
+                return Related::factory( $value, $property->getParameters(), null, $property->getGroup());
             case self::XML :
-                return Xml::factory( $value, $parameters, null, $group );
+                return Xml::factory( $value, $property->getParameters(), null, $property->getGroup());
             default :
                 break;
         } // end switch
-        $valueType = ( isset( $parameters[self::VALUE] ) &&
-            in_array( $parameters[self::VALUE], Xprop::getAcceptedValueTypes(), true ))
-            ? $parameters[self::VALUE]
+        $property->setPropName( $propName );
+        $valueType = ( $property->hasValueParameter() &&
+            in_array( $property->getParameters( self::VALUE ), Xprop::getAcceptedValueTypes(), true ))
+            ? $property->getParameters( self::VALUE )
             : self::TEXT;
+        $property->setValueType( $valueType );
         if( ! Xprop::isAnyParameterAllowed()) {
             $allowedPkeys = Xprop::getAcceptedParameterKeys();
-            foreach( $parameters as $pKey => $pValue ) {
+            foreach( $property->getParameters() as $pKey => $pValue ) {
                 if( in_array( $pKey, $allowedPkeys, true )) {
                     continue;
                 }
-                unset( $parameters[$pKey] );
+                $property->unsetParameter( $pKey );
             } // end foreach
         } // end if
-        return Xprop::factory(
-            $propName,
-            $value,
-            $parameters,
-            $valueType,
-            $group
-        );
+        return $property->setValue( $value );
     }
 }

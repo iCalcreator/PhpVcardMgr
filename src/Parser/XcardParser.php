@@ -27,7 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Parser;
 
-use DOMNode;
 use Exception;
 use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
@@ -42,13 +41,12 @@ class XcardParser extends XcardParserBase
      *
      * @inheritDoc
      * @param string $source  XML
-     * @param bool|null $asDomNode
-     * @return Vcard[]|DOMNode
+     * @return Vcard[]
      * @throws Exception
      * @throws InvalidArgumentException
      * @throws RuntimeException
      */
-    public function parse( string $source, ? bool $asDomNode = null )
+    public function parse( string $source ) : array
     {
         static $FMTerr1 = 'Error #%d parsing xml';
         static $FMTerr3 = 'No xml root element found';
@@ -60,9 +58,6 @@ class XcardParser extends XcardParserBase
         while( @$this->reader->read()) {
             if(( XMLReader::ELEMENT === $this->reader->nodeType ) &&
                 ( self::XVCARDS === $this->reader->localName )) {
-                    if( $asDomNode ) {
-                        return $this->reader->expand();
-                    }
                     while( @$this->reader->read()) {
                         if(( XMLReader::ELEMENT === $this->reader->nodeType ) &&
                             ( self::XVCARD === $this->reader->localName )) {
@@ -93,7 +88,7 @@ class XcardParser extends XcardParserBase
      */
     private function vcardParse() : Vcard
     {
-        static $skipProps = [ self::PRODID, self::VERSION ];
+        static $SKIPPROPS = [ self::PRODID, self::VERSION ];
         $vCard = new Vcard();
         $group = $propName = null;
         $xcardPropertyParser = XcardPropertyParser::factory( $this->reader );
@@ -102,7 +97,7 @@ class XcardParser extends XcardParserBase
                 if( self::XVCARD === $this->reader->localName ) {
                     break;
                 }
-                if(( self::XGROUP === $this->reader->localName ) && ! empty( $group )) {
+                if( self::XGROUP === $this->reader->localName ) {
                     $group = null;
                 }
                 continue;
@@ -110,7 +105,7 @@ class XcardParser extends XcardParserBase
             if( XMLReader::ELEMENT !== $this->reader->nodeType ) {
                 continue;
             }
-            if( in_array( $propName, $skipProps, true )) {
+            if( in_array( $propName, $SKIPPROPS, true )) {
                 $propName = null;
                 continue;
             }
@@ -119,15 +114,15 @@ class XcardParser extends XcardParserBase
                     while( $this->reader->moveToNextAttribute()) {
                         if( self::XNAME === $this->reader->localName ) {
                             $group = $this->reader->value;
-                            $this->reader->moveToElement();
-                            continue 2;
+                            break;
                         }
-                    }
-                } // end while
-                continue; // but group are expected to have attribute 'name'
+                    } // end while
+                    $this->reader->moveToElement();
+                } // end if
+                continue; // but group are expected to have attribute 'name'...
             } // end if
             $propName = strtoupper( $this->reader->localName );
-            if( in_array( $propName, $skipProps, true )) {
+            if( in_array( $propName, $SKIPPROPS, true )) {
                 continue;
             }
             $property = $xcardPropertyParser->parse( $propName );
@@ -135,7 +130,7 @@ class XcardParser extends XcardParserBase
                 $property->setGroup( $group );
             }
             $vCard->addProperty( $property );
-        }
+        } // end while
         return $vCard;
     }
 

@@ -27,6 +27,9 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use InvalidArgumentException;
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
+
 /**
  * ADR
  *
@@ -75,97 +78,6 @@ final class Adr extends PropertyBase
     ];
 
     /**
-     * Class constructor
-     *
-     * @param string|array $pobox    list-component   or a 7-items array
-     * @param null|string|array $ext list-component   or parameters
-     * @param null|string $street    list-component
-     * @param null|string $locality  list-component
-     * @param null|string $region    list-component
-     * @param null|string $code      list-component
-     * @param null|string $country   list-component
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct(
-        $pobox,
-        $ext = null,
-        ? string $street = null,
-        ? string $locality = null,
-        ? string $region = null,
-        ? string $code = null,
-        ? string $country = null,
-        ? array  $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) {
-        if( is_array( $pobox ) && ( 7 === count( $pobox ))) {
-            $parameters = is_array( $ext ) ? $ext : [];
-            $valueType  = $street;
-            $group      = $locality;
-            [ $pobox2, $ext, $street, $locality, $region, $code, $country ] = $pobox;
-            $pobox      = $pobox2;
-        }
-        $this->populate(
-            [
-                $pobox,
-                $ext,
-                $street,
-                $locality,
-                $region,
-                $code,
-                $country,
-            ],
-            $parameters,
-            $valueType,
-            $group
-        );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $pobox    list-component   or a 7-items array
-     * @param null|string|array $ext list-component   or parameters
-     * @param null|string $street    list-component   or valueType
-     * @param null|string $locality  list-component   or group
-     * @param null|string $region    list-component
-     * @param null|string $code      list-component
-     * @param null|string $country   list-component
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Adr
-     */
-    public static function factory(
-        $pobox,
-        $ext = null,
-        ? string $street = null,
-        ? string $locality = null,
-        ? string $region = null,
-        ? string $code = null,
-        ? string $country = null,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) : Adr
-    {
-        return new self(
-            $pobox,
-            $ext,
-            $street,
-            $locality,
-            $region,
-            $code,
-            $country,
-            $parameters,
-            $valueType,
-            $group
-        );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string
@@ -197,5 +109,53 @@ final class Adr extends PropertyBase
     public static function isAnyParameterAllowed() : bool
     {
         return true;
+    }
+
+    /**
+     * @override
+     * @param string|array $value    list-component  string (pobox) or a 7-items array
+     * @param null|string|array $ext list-component   or parameters
+     * @param null|string $street    list-component
+     * @param null|string $locality  list-component
+     * @param null|string $region    list-component
+     * @param null|string $code      list-component
+     * @param null|string $country   list-component
+     */
+    public function setValue(
+        $value,
+        ? string $ext = null,
+        ? string $street = null,
+        ? string $locality = null,
+        ? string $region = null,
+        ? string $code = null,
+        ? string $country = null
+    ) : PropertyInterface
+    {
+        static $ERR = 'Adr expects pobox/ext/street/locality/region/code/country, got ' ;
+        switch( true ) {
+            case ( is_string(  $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) :
+                $value = explode( StringUtil::$SEMIC, $value );
+                // fall through
+            case is_array( $value ) :
+                $arrCnt = count( $value );
+                switch( true ) {
+                    case ( 7 === $arrCnt ) :
+                        break;
+                    case ( 7 > $arrCnt ) :
+                        $value = array_pad( $value, 7, StringUtil::$SP0 );
+                        break;
+                    default :
+                        throw new InvalidArgumentException( $ERR . var_export( $value, true ));
+                } // end switch
+                break;
+            default :
+                $value = [ $value, $ext, $street, $locality, $region, $code, $country ];
+        } // end switch
+        $value = self::trimSub( $value );
+        if( empty( implode( $value ))) {
+            throw new InvalidArgumentException( $ERR . var_export( $value, true ));
+        }
+        $this->value = $value;
+        return $this;
     }
 }

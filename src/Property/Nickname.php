@@ -27,6 +27,9 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use InvalidArgumentException;
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
+
 /**
  * NICKNAME
  *
@@ -40,42 +43,6 @@ namespace Kigkonsult\PhpVcardMgr\Property;
  */
 final class Nickname extends PropertyBase
 {
-    /**
-     * Class constructor
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Nickname
-     */
-    public static function factory( 
-        string $value, 
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Nickname
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
     /**
      * @inheritDoc
      */
@@ -105,5 +72,35 @@ final class Nickname extends PropertyBase
     public static function isAnyParameterAllowed() : bool
     {
         return true;
+    }
+
+    /**
+     * @override
+     * @param string|array $value
+     * @return static
+     */
+    public function setValue( $value ) : PropertyInterface
+    {
+        static $ERR = '%s expects string, got \'%s\'' ;
+        switch( true ) {
+            case is_array( $value ) :
+                break;
+            case ( ! is_string( $value )) :
+                throw new InvalidArgumentException(
+                    sprintf(
+                        $ERR,
+                        $this->getPropName(),
+                        var_export( $value, true )
+                    )
+                );
+            case ( false !== strpos( $value, StringUtil::$COMMA )) :
+                $value = explode( StringUtil::$COMMA, $value );
+                break;
+            default :
+                $value = [ $value ];
+                break;
+        }
+        $this->value = self::trimSub( $value );
+        return $this;
     }
 }

@@ -27,9 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use DateTime;
-use InvalidArgumentException;
-
 /**
  * BDAY
  *
@@ -51,44 +48,6 @@ use InvalidArgumentException;
  */
 final class Bday extends PropertyDate
 {
-    /**
-     * Class constructor
-     *
-     * @param string|DateTime $value  Ymd-string or DateTime
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @throws InvalidArgumentException
-     */
-    public function __construct(
-        $value,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|DateTime $value  Ymd-string or DateTime
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Bday
-     * @throws InvalidArgumentException
-     */
-    public static function factory( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Bday
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
     /**
      * @inheritDoc
      */

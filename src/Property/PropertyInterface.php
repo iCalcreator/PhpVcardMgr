@@ -51,6 +51,12 @@ interface PropertyInterface extends BaseInterface
     public function isGroupSet() : bool;
 
     /**
+     * @param string $group
+     * @return static
+     */
+    public function setGroup( string $group ) : PropertyInterface;
+
+    /**
      * Return [group '.' ] property name
      *
      * @return string

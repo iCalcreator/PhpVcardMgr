@@ -48,43 +48,6 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 final class ClientPidMap extends PropertyBase
 {
     /**
-     * Class constructor
-     *
-     * @param string|array $value          1*DIGIT ";" URI or as array
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct(
-        $value,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    )
-    {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $value   <int> ; <uri> or in array
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return ClientPidMap
-     */
-    public static function factory(
-        $value,
-        ? array $parameters = [],
-        ? string $valueType = null,
-        ? string $group = null
-    ) : ClientPidMap
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
-    /**
      * @inheritDoc
      */
     public function getPropName() : string
@@ -117,16 +80,16 @@ final class ClientPidMap extends PropertyBase
      */
     public function setValue( $value, ? string $uri = null ) : PropertyInterface
     {
-        static $ERR = 'pid and uri expected for ClientPidMap value, got pid %s and uri %s';
+        static $ERR = 'ClientPidMap expect (int) pid and (string) uri, got pid %s and uri %s';
         if( is_string( $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) {
-            [ $value, $uri ] = explode( StringUtil::$SEMIC, $value, 2 );
+            [ $value, $uri ] = StringUtil::semicSplit( $value, 2 );
         }
         elseif( is_array( $value )) {
             [ $value, $uri ] = $value;
         }
         if( empty( $uri ) ||
             ! is_string( $uri ) ||
-            ! ctype_digit((string) $value )) {
+            ! ctype_digit( trim((string) $value ))) {
             throw new InvalidArgumentException(
                 sprintf( $ERR, var_export( $value, true ), var_export( $uri, true ))
             );

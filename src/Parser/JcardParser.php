@@ -28,49 +28,13 @@ declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Parser;
 
 use Exception;
-use Kigkonsult\PhpVcardMgr\Property\Adr;
-use Kigkonsult\PhpVcardMgr\Property\Anniversary;
-use Kigkonsult\PhpVcardMgr\Property\Bday;
-use Kigkonsult\PhpVcardMgr\Property\CalAdrUri;
-use Kigkonsult\PhpVcardMgr\Property\CalUri;
-use Kigkonsult\PhpVcardMgr\Property\Categories;
-use Kigkonsult\PhpVcardMgr\Property\ClientPidMap;
-use Kigkonsult\PhpVcardMgr\Property\Email;
-use Kigkonsult\PhpVcardMgr\Property\Fburl;
-use Kigkonsult\PhpVcardMgr\Property\FullName;
-use Kigkonsult\PhpVcardMgr\Property\Gender;
-use Kigkonsult\PhpVcardMgr\Property\Geo;
-use Kigkonsult\PhpVcardMgr\Property\Impp;
-use Kigkonsult\PhpVcardMgr\Property\Key;
-use Kigkonsult\PhpVcardMgr\Property\Kind;
-use Kigkonsult\PhpVcardMgr\Property\Lang;
-use Kigkonsult\PhpVcardMgr\Property\Logo;
-use Kigkonsult\PhpVcardMgr\Property\Member;
-use Kigkonsult\PhpVcardMgr\Property\N;
-use Kigkonsult\PhpVcardMgr\Property\Nickname;
-use Kigkonsult\PhpVcardMgr\Property\Note;
-use Kigkonsult\PhpVcardMgr\Property\Org;
-use Kigkonsult\PhpVcardMgr\Property\Photo;
-use Kigkonsult\PhpVcardMgr\Property\PropertyInterface;
-use Kigkonsult\PhpVcardMgr\Property\Related;
-use Kigkonsult\PhpVcardMgr\Property\Rev;
-use Kigkonsult\PhpVcardMgr\Property\Role;
-use Kigkonsult\PhpVcardMgr\Property\Sound;
-use Kigkonsult\PhpVcardMgr\Property\Source;
-use Kigkonsult\PhpVcardMgr\Property\Tel;
-use Kigkonsult\PhpVcardMgr\Property\Title;
-use Kigkonsult\PhpVcardMgr\Property\Tz;
-use Kigkonsult\PhpVcardMgr\Property\Uid;
-use Kigkonsult\PhpVcardMgr\Property\Url;
-use Kigkonsult\PhpVcardMgr\Property\Xml;
-use Kigkonsult\PhpVcardMgr\Property\Xprop;
 use Kigkonsult\PhpVcardMgr\Util\DateUtil;
 use Kigkonsult\PhpVcardMgr\Util\Json;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use Kigkonsult\PhpVcardMgr\Vcard;
 use RuntimeException;
 
-class JcardParser implements ParserInterface
+class JcardParser extends ParserBase implements ParserInterface
 {
     /**
      * @inheritDoc
@@ -79,14 +43,12 @@ class JcardParser implements ParserInterface
      */
     public function parse( string $source ) : array
     {
-        static $VCARD  = 'vcard';
-        static $ERR1   = 'First element \'vcard\' not found';
-        static $ERR2   = 'No vcard (array) found';
-        static $ERR3   = 'VERSION not 4.0';
-
-        $jsonArray = Json::jsonDecode( $source );
-
-        $item = array_shift( $jsonArray );
+        static $VCARD = 'vcard';
+        static $ERR1  = 'First element \'vcard\' not found';
+        static $ERR2  = 'No vcard (array) found';
+        static $ERR3  = 'VERSION not 4.0';
+        $jsonArray    = Json::jsonDecode( $source );
+        $item         = array_shift( $jsonArray );
         if( $VCARD !== $item ) {
             throw new RuntimeException( $ERR1 );
         }
@@ -104,172 +66,71 @@ class JcardParser implements ParserInterface
                 $group      = null;
                 [ $propName, $parameters, $valueType, $value ] = $propArray;
                 $propName   = strtoupper( $propName );
+                $property   = self::newProperty( $propName );
                 $parameters = self::prepParameters( $parameters, $group );
+                $property->setParameters( $parameters );
+                if( ! empty( $group )) {
+                    $property->setGroup( $group );
+                }
+                $property->setValueType( $valueType );
                 switch( $propName ) {
                     case self::VERSION :
-                        if( '4.0' !== $value ) {
+                        if( self::VERSION4 !== $value ) {
                             throw new RuntimeException( $ERR3 );
-                        }
-                    // fall through
+                        } // fall through
                     case self::PRODID :
                         continue 2;
-                    case self::ADR :
-                        $property = ADR::factory( 
-                            self::concatSubArrToCommaString( $value ), 
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::ANNIVERSARY :
-                        $property = Anniversary::factory(
-                            DateUtil::convertJcard2VcardDates( $value, $valueType ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::BDAY :
-                        $property = Bday::factory(
-                            DateUtil::convertJcard2VcardDates( $value, $valueType ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::CALADRURI :
-                        $property = CalAdrUri::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::CALURI :
-                        $property = CalUri::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::CATEGORIES :
-                        $property = Categories::factory(
-                            implode( StringUtil::$COMMA, $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::CLIENTPIDMAP :
-                        $property = ClientPidMap::factory(
-                            self::concatToSemicString( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::EMAIL :
-                        $property = Email::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::FBURL :
-                        $property = Fburl::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::FN :
-                        $property = FullName::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::GENDER :
-                        $property = Gender::factory(
-                            self::concatToSemicString( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::GEO :
-                        $property = Geo::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::IMPP :
-                        $property = Impp::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::KEY :
-                        $property = Key::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::KIND :
-                        $property = Kind::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::LANG  :
-                        $property = Lang::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::LOGO :
-                        $property = Logo::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::MEMBER :
-                        $property = Member::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::NICKNAME :
-                        $property = Nickname::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::NOTE :
-                        $property = Note::factory( $value, $parameters, $valueType, $group );
-                        break;
+                    case self::ADR : // fall through
                     case self::N :
-                        $property = N::factory(
-                            self::concatSubArrToCommaString( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
+                        $property->setValue( self::concatSubArrToCommaString( $value ));
                         break;
-                    case self::ORG :
-                        $property = Org::factory(
-                            self::concatToSemicString( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::PHOTO :
-                        $property = Photo::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::RELATED :
-                        $property = Related::factory( $value, $parameters, $valueType, $group );
+                    case self::ANNIVERSARY : // fall through
+                    case self::BDAY :
+                        $property->setValue( DateUtil::convertJcard2VcardDates( $value, $valueType ));
                         break;
                     case self::REV :
-                        $property = Rev::factory(
-                            DateUtil::convertJcard2VcardTimestamp( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
-                        break;
-                    case self::ROLE :
-                        $property = Role::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::SOUND :
-                        $property = Sound::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::SOURCE :
-                        $property = Source::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::TEL :
-                        $property = Tel::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::TITLE :
-                        $property = Title::factory( $value, $parameters, $valueType, $group );
+                        $property->setValue( DateUtil::convertJcard2VcardTimestamp( $value ));
                         break;
                     case self::TZ :
-                        $property = Tz::factory(
-                            DateUtil::convertJcard2VcardZone( $value ),
-                            $parameters,
-                            $valueType,
-                            $group
-                        );
+                        $property->setValue( DateUtil::convertJcard2VcardZone( $value ));
                         break;
-                    case self::UID :
-                        $property = Uid::factory( $value, $parameters, $valueType, $group );
-                        break;
-                    case self::URL :
-                        $property = Url::factory( $value, $parameters, $valueType, $group );
-                        break;
+
+                    case self::CALADRURI :    // fall through
+                    case self::CALURI :       // fall through
+                    case self::CATEGORIES :   // fall through
+                    case self::CLIENTPIDMAP : // fall through
+                    case self::EMAIL :        // fall through
+                    case self::FBURL :        // fall through
+                    case self::FN :           // fall through
+                    case self::GENDER :       // fall through
+                    case self::GEO :          // fall through
+                    case self::IMPP :         // fall through
+                    case self::KEY :          // fall through
+                    case self::KIND :         // fall through
+                    case self::LANG  :        // fall through
+                    case self::LOGO :         // fall through
+                    case self::MEMBER :       // fall through
+                    case self::NICKNAME :     // fall through
+                    case self::NOTE :         // fall through
+                    case self::ORG :          // fall through
+                    case self::PHOTO :        // fall through
+                    case self::RELATED :      // fall through
+                    case self::ROLE :         // fall through
+                    case self::SOUND :        // fall through
+                    case self::SOURCE :       // fall through
+                    case self::TEL :          // fall through
+                    case self::TITLE :        // fall through
+                    case self::UID :          // fall through
+                    case self::URL :          // fall through
                     case self::XML :
-                        $property = Xml::factory( $value, $parameters, $valueType, $group );
+                        $property->setValue( $value );
                         break;
                     default :
                         if( ! StringUtil::isXprefixed( $propName )) {
                             continue 2;
                         }
-                        $property = Xprop::factory( $propName, $value, $parameters, $valueType, $group );
+                        $property->setPropName( $propName )
+                            ->setValue( $value );
                 } // end switch
                 $vCard->addProperty( $property );
             }
@@ -293,15 +154,6 @@ class JcardParser implements ParserInterface
     }
 
     /**
-     * @param string|array $value
-     * @return string
-     */
-    private static function concatToSemicString( $value ) : string
-    {
-        return is_array( $value ) ? implode( StringUtil::$SEMIC, $value ) : $value;
-    }
-
-    /**
      * @param array $parameters
      * @param null|string $group
      * @return array
@@ -313,16 +165,17 @@ class JcardParser implements ParserInterface
             $group  = $parameters[self::GROUP];
             unset( $parameters[self::GROUP] );
         }
-        if( isset( $parameters[self::LABEL] ) &&
-            ( false !== strpos( $parameters[self::LABEL], StringUtil::$NEWLINE ))) {
+        if( isset( $parameters[self::LABEL] )) {
             $parameters[self::LABEL] = str_replace(
-                StringUtil::$NEWLINE,
+                StringUtil::$CRLFs,
                 StringUtil::$STREOL,
                 $parameters[self::LABEL]
             );
         }
-        if( isset( $parameters[self::PID] ) && is_array( $parameters[self::PID] )) {
-            $parameters[self::PID] = implode( StringUtil::$COMMA, $parameters[self::PID] );
+        foreach( [ self::PID, self::SORT_AS] as $pKey ) {
+            if( isset( $parameters[$pKey] ) && is_array( $parameters[$pKey] ) ) {
+                $parameters[$pKey] = implode( StringUtil::$COMMA, $parameters[$pKey] );
+            }
         }
         return $parameters;
     }

@@ -103,7 +103,7 @@ trait Vcard4StringProviderTrait
             'UID:urn:uuid:4fbe8971-0bc3-424c-9c26-36c3e1eff6b2' . "\r\n" .
             'FN:Simon Perreault' . "\r\n" .
             'N:Perreault;Simon;;;ing. jr,M.Sc.' . "\r\n" .
-            'NICKNAME;TYPE=work:Jim\,Jimmie' . "\r\n" .
+            'NICKNAME;TYPE=work:Jim,Jimmie' . "\r\n" .
 // 'BDAY:--0203' . "\r\n" .
             'BDAY:20200203' . "\r\n" .
             'ANNIVERSARY:20090808T1430-0500' . "\r\n" .

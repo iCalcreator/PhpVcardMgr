@@ -27,6 +27,7 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
 /**
@@ -42,42 +43,6 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  */
 final class Org extends PropertyBase
 {
-    /**
-     * Class constructor
-     *
-     * @param string|array $value          component *(";" component)
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     */
-    public function __construct( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) {
-        $this->populate( $value, $parameters, $valueType, $group );
-    }
-
-    /**
-     * Class factory method
-     *
-     * @param string|array $value
-     * @param null|array $parameters
-     * @param null|string $valueType
-     * @param null|string $group
-     * @return Org
-     */
-    public static function factory( 
-        $value,
-        ? array $parameters = [], 
-        ? string $valueType = null, 
-        ? string $group = null
-    ) : Org
-    {
-        return new self( $value, $parameters, $valueType, $group );
-    }
-
     /**
      * @inheritDoc
      */
@@ -114,12 +79,13 @@ final class Org extends PropertyBase
      * @override
      * @param string|array $value
      * @return static
+     * @throws InvalidArgumentException
      */
     public function setValue( $value ) : PropertyInterface
     {
+        static $ERR = 'Org expects string/array, got \'%s\'' ;
         switch( true ) {
             case is_array( $value ) :
-                $value = self::trimSub( $value );
                 break;
             case ( false !== strpos( $value, StringUtil::$SEMIC )) :
                 $value = explode( StringUtil::$SEMIC, $value );
@@ -127,6 +93,10 @@ final class Org extends PropertyBase
             default :
                 $value = [ $value ];
                 break;
+        }
+        $value = self::trimSub( $value );
+        if( empty( implode( $value ))) {
+            throw new InvalidArgumentException( $ERR . var_export( $value, true ));
         }
         $this->value = $value;
         return $this;

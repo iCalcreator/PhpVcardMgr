@@ -43,37 +43,37 @@ class VcardFormatterUtil implements BaseInterface
     public static function createParams( array $parameters, array $cceptedParameterKeys ) : string
     {
         static $FMTKEQV  = '%s=%s';
-        $output          = StringUtil::$SP0;
+        $output  = StringUtil::$SP0;
         [ $params, $xparams ] = self::quoteParams( $parameters);
         $pKeys   = array_keys( $params );
-        $keys2   = array_diff( $pKeys, $cceptedParameterKeys ); // iana X-params, last, any order
+        $keys2   = array_diff( $pKeys, $cceptedParameterKeys ); // set iana(?) params last, any order
         $keys1   = array_diff( $pKeys, $keys2 );
         $stdkeys = [];
         foreach( $cceptedParameterKeys as $orderkey ) {
             if( in_array( $orderkey, $keys1, true )) {
                 $stdkeys[] = $orderkey;
             }
-        }
+        } // end foreach
         foreach(( $stdkeys + $keys2 ) as $paramKey ) {
             $output .= StringUtil::$SEMIC;
             $output .= sprintf( $FMTKEQV, $paramKey, $params[$paramKey] );
-        }
+        } // end foreach
         foreach( $xparams as $paramKey => $paramValue ) {
             $output .= StringUtil::$SEMIC;
             $output .= sprintf( $FMTKEQV, $paramKey, $paramValue );
-        }
+        } // end foreach
         return $output;
     }
 
     /**
      * Return parameter with opt. quoted parameter value
      *
-     * "-Quotes a value if value contains ':', ';' or ','
+     * "-quotes a value if value contains ':', ';' or ','
      *
      * @param array $inputParams
      * @return array[]
      */
-    public static function quoteParams( array $inputParams ) : array
+    private static function quoteParams( array $inputParams ) : array
     {
         static $FMTQ       = '"%s"';
         $params = $xparams = [];
@@ -81,7 +81,7 @@ class VcardFormatterUtil implements BaseInterface
             if( is_array( $paramValue )) { // TYPE, PID, SORT-AS etc
                 $paramValue = implode( StringUtil::$COMMA, $paramValue );
             }
-            if( in_array( $paramKey, [ self::PID, self::PREF ], true ) ) {
+            if( in_array( $paramKey, [ self::PID, self::PREF ], true )) {
                 if( $paramValue == (int) $paramValue ) { // note ==
                     $paramValue = (int) $paramValue;
                 }
@@ -89,7 +89,7 @@ class VcardFormatterUtil implements BaseInterface
             elseif( self::hasColonOrSemicOrComma( $paramValue )) {
                 $paramValue = sprintf( $FMTQ, $paramValue );
             }
-            if( StringUtil::isXprefixed( $paramKey ) ) {
+            if( StringUtil::isXprefixed( $paramKey )) {
                 $xparams[$paramKey] = $paramValue;
             }
             else {
@@ -122,7 +122,7 @@ class VcardFormatterUtil implements BaseInterface
      * @param mixed $string
      * @return bool
      */
-    public static function hasColonOrSemicOrComma( $string ): bool
+    private static function hasColonOrSemicOrComma( $string ): bool
     {
         return ( is_string( $string ) &&
             (( false !== strpos( $string, StringUtil::$COLON )) ||
@@ -140,7 +140,6 @@ class VcardFormatterUtil implements BaseInterface
      */
     public static function strrep( string $string ) : string
     {
-        static $BSLCN    = '\n';
         static $SPECCHAR = [ 'n', 'N', 'r', ',', ';' ];
         static $SQ       = "'";
         static $QBSLCR   = "\r";
@@ -168,22 +167,21 @@ class VcardFormatterUtil implements BaseInterface
         $string = self::escapeChar( [ StringUtil::$COMMA, StringUtil::$SEMIC ], $string );
         // replace "\r\n" by '\n'
         if( str_contains( $string, StringUtil::$CRLF )) {
-            $string = str_replace( StringUtil::$CRLF, $BSLCN, $string );
+            $string = str_replace( StringUtil::$CRLF, StringUtil::$STREOL, $string );
         }
         // or replace "\r" by '\n'
         elseif( str_contains( $string, $QBSLCR )) {
-            $string = str_replace( $QBSLCR, $BSLCN, $string );
+            $string = str_replace( $QBSLCR, StringUtil::$STREOL, $string );
         }
-        // or replace '\N' by '\n'
+        // or replace "\n" by '\n'
         elseif( str_contains( $string, $QBSLCN )) {
-            $string = str_replace( $QBSLCN, $BSLCN, $string );
+            $string = str_replace( $QBSLCN, StringUtil::$STREOL, $string );
         }
         // replace '\N' by  '\n'
         if( str_contains( $string, $BSUCN )) {
-            $string = str_replace( $BSUCN, $BSLCN, $string );
+            $string = str_replace( $BSUCN, StringUtil::$STREOL, $string );
         }
-        // replace "\r\n" by '\n'
-        return str_replace( StringUtil::$CRLF, $BSLCN, $string );
+        return $string;
     }
 
     /**

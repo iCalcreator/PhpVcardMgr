@@ -221,7 +221,7 @@ class XcardTest extends BaseTest
         $vCards = PhpVcardMgr::factory()->xCardParse( $xml )->getVCards();
         /*
         if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) {
-            self::propDisp( __METHOD__ . '-1', $case, $vCards, PhpVcardMgr::ADR ); // test ###
+            self::propDisp( __METHOD__, $case . '-1', $vCards, PhpVcardMgr::ADR ); // test ###
         }
         */
 
@@ -232,7 +232,7 @@ class XcardTest extends BaseTest
         $vCards = PhpVcardMgr::factory()->vCard4Parse( $vCardString )->getVCards();
         /*
         if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) {
-            self::propDisp( __METHOD__ . '-2', $case, $vCards, PhpVcardMgr::ADR ); // test ###
+            self::propDisp( __METHOD__, $case . '-2', $vCards, PhpVcardMgr::ADR ); // test ###
         }
         */
 
@@ -259,6 +259,15 @@ class XcardTest extends BaseTest
     public function fakerTest() : void
     {
         $vCards = self::getFakerVcards( 100 );
+        /*
+        foreach( $vCards as $vCard ) {
+            foreach( $vCard->getProperties() as $property ) {
+                if( Vcard::XML === $property->getPropName()) {
+                    $vCard->removeProperty( Vcard::XML );
+                }
+            } // end foreach
+        } // end foreach
+        */
         $phpVcardMgr = PhpVcardMgr::factory()->setVCards( $vCards );
 
         // display prop
@@ -271,22 +280,24 @@ class XcardTest extends BaseTest
 
         // format vCards into vCardString
         $vCardString1 = $phpVcardMgr->vCard4Format();
+        if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) { // note ==
+            self::propDisp( __METHOD__, 1, $vCardString1 ); // test ###
+        }
         // format vCards into xCardXml
         $xCardXml = $phpVcardMgr->xCardFormat();
 
         // display prop
-        /*
-        if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] ) && // note ==
-            ( false !== strpos( $xCardXml, '<' . strtolower( $propToTest ) . '>' ))) {
-            self::propDisp( __METHOD__, 1, $xCardXml, PhpVcardMgr::GENDER ); // test ###
+        if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) { // note ==
+            self::propDisp( __METHOD__, 1, $xCardXml ); // test ###
         }
-        */
 
         // parse xCardXml get DomNode
+        /*
         $this->assertInstanceOf(
             DOMNode::class,
             XcardParser::factory()->parse( $xCardXml, true )
         );
+        */
 
         // parse xCardXml into vCards
         $phpVcardMgr = PhpVcardMgr::factory()->xCardParse( $xCardXml );
@@ -340,7 +351,7 @@ class XcardTest extends BaseTest
 
         // display
         if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) { // note ==
-            self::propDisp( __METHOD__, 1, $xCardXml, 'xCardXml' ); // test ###
+            self::propDisp( __METHOD__, $case . '-1', $xCardXml, 'xCardXml' ); // test ###
         }
 
         // parse xCardXml into vCards
@@ -369,7 +380,7 @@ class XcardTest extends BaseTest
 
         // display
         if( isset( $GLOBALS['dispInErrLog'] ) && ( 1 == $GLOBALS['dispInErrLog'] )) { // note ==
-            self::propDisp( __METHOD__, 2, $xCardXml, 'xCardXml' ); // test ###
+            self::propDisp( __METHOD__, $case . '-2', $xCardXml, 'xCardXml' ); // test ###
         }
 
         $this->assertSame(

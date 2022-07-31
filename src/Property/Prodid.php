@@ -40,25 +40,22 @@ use Kigkonsult\PhpVcardMgr\PhpVcardMgr;
  * PRODID-param = "VALUE=text" / any-param  param ignored
  * PRODID-value = text
  */
-final class Prodid extends PropertyBase
+final class Prodid extends PropertyPV
 {
     /**
      * Class constructor
-     */
-    public function __construct() {
-        static $FMT      = '-//NONSGML kigkonsult.se %s//';
-        $this->value     = sprintf( $FMT, PhpVcardMgr::VCARD_VERSION );
-        $this->valueType = self::getAcceptedValueTypes( true );
-    }
-
-    /**
-     * Class factory method
      *
-     * @return Prodid
+     * @override
      */
-    public static function factory() : Prodid
-    {
-        return new self();
+    public function __construct(
+        ? string $value = null,
+        ? array $parameters = [],
+        ? string $valueType = null,
+        ? string $group = null
+    ) {
+        static $FMT      = '-//NONSGML kigkonsult.se %s//';
+        $this->value     = sprintf( $FMT, PhpVcardMgr::PVM_VERSION );
+        $this->valueType = self::getAcceptedValueTypes( true );
     }
 
     /**
@@ -67,31 +64,5 @@ final class Prodid extends PropertyBase
     public function getPropName() : string
     {
         return self::PRODID;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getAcceptedParameterKeys() : array
-    {
-        return [];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function isAnyParameterAllowed() : bool
-    {
-        return false;
-    }
-
-    /**
-     * @override
-     * @param mixed $value ignored
-     * @return static
-     */
-    public function setValue( $value ) : PropertyInterface
-    {
-        return $this;
     }
 }
