@@ -87,7 +87,7 @@ final class Org extends PropertyBase
         switch( true ) {
             case is_array( $value ) :
                 break;
-            case ( false !== strpos( $value, StringUtil::$SEMIC )) :
+            case StringUtil::containsSemic( $value ) :
                 $value = explode( StringUtil::$SEMIC, $value );
                 break;
             default :

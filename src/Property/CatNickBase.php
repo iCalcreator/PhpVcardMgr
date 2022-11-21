@@ -28,59 +28,32 @@ declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
 use InvalidArgumentException;
+use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
-/**
- * CATEGORIES
- *
-* application category information about the vCard, also known as "tags"
- *
- * Value type:  One or more text values separated by a COMMA character (U+002C).
- * Cardinality:  *
- *
- * CATEGORIES-param = "VALUE=text" / pid-param / pref-param / type-param / altid-param / any-param
- * CATEGORIES-value = text-list
- */
-final class Categories extends CatNickBase
+abstract class CatNickBase extends PropertyBase
 {
     /**
-     * @inheritDoc
-     */
-    public function getPropName() : string
-    {
-        return self::CATEGORIES;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getAcceptedParameterKeys() : array
-    {
-        return [
-            self::VALUE,
-            self::PID,
-            self::PREF,
-            self::TYPE,
-            self::ALTID,
-        ];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function isAnyParameterAllowed() : bool
-    {
-        return true;
-    }
-
-    /**
-     * @override
+     * @param string $propName
      * @param string|array $value
-     * @return static
-     * @throws InvalidArgumentException
+     * @return array
      */
-    public function setValue( $value ) : PropertyInterface
+    protected static function conformInput( string $propName, $value ) : array
     {
-        $this->value = self::conformInput( $this->getPropName(), $value );
-        return $this;
+        static $ERR = '%s expects string/array, got \'%s\'' ;
+        switch( true ) {
+            case is_array( $value ) :
+                break;
+            case ( ! is_string( $value )) :
+                throw new InvalidArgumentException(
+                    sprintf( $ERR, $propName, var_export( $value, true ))
+                );
+            case ( false !== strpos( $value, StringUtil::$COMMA )) :
+                $value = explode( StringUtil::$COMMA, $value );
+                break;
+            default :
+                $value = [ $value ];
+                break;
+        }
+        return self::trimSub( $value );
     }
 }

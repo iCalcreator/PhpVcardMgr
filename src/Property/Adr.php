@@ -27,9 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use InvalidArgumentException;
-use Kigkonsult\PhpVcardMgr\Util\StringUtil;
-
 /**
  * ADR
  *
@@ -56,7 +53,7 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  * ADR-component-code     = list-component
  * ADR-component-country  = list-component
  */
-final class Adr extends PropertyBase
+final class Adr extends AdrNbase
 {
     /**
      * The structured type value
@@ -131,31 +128,17 @@ final class Adr extends PropertyBase
         ? string $country = null
     ) : PropertyInterface
     {
-        static $ERR = 'Adr expects pobox/ext/street/locality/region/code/country, got ' ;
-        switch( true ) {
-            case ( is_string(  $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) :
-                $value = explode( StringUtil::$SEMIC, $value );
-                // fall through
-            case is_array( $value ) :
-                $arrCnt = count( $value );
-                switch( true ) {
-                    case ( 7 === $arrCnt ) :
-                        break;
-                    case ( 7 > $arrCnt ) :
-                        $value = array_pad( $value, 7, StringUtil::$SP0 );
-                        break;
-                    default :
-                        throw new InvalidArgumentException( $ERR . var_export( $value, true ));
-                } // end switch
-                break;
-            default :
-                $value = [ $value, $ext, $street, $locality, $region, $code, $country ];
-        } // end switch
-        $value = self::trimSub( $value );
-        if( empty( implode( $value ))) {
-            throw new InvalidArgumentException( $ERR . var_export( $value, true ));
-        }
-        $this->value = $value;
+        $this->value = self::conformInput( 7, $value, $ext, $street, $locality, $region, $code, $country );
         return $this;
+    }
+
+    /**
+     * @param mixed
+     * @return string
+     */
+    protected static function getERRstr( $value ) : string
+    {
+        static $ERR = 'Adr expects pobox/ext/street/locality/region/code/country, got ' ;
+        return $ERR . var_export( $value, true );
     }
 }

@@ -189,6 +189,7 @@ class StringUtil
 
     /**
      * Semicolon-split string into array with 'splitNo' elements
+     *
      * @param string $value
      * @param int $splitNo
      * @return array
@@ -196,6 +197,26 @@ class StringUtil
     public static function semicSplit( string $value, int $splitNo ) : array
     {
         return array_pad( explode( self::$SEMIC, $value, $splitNo ), $splitNo, self::$SP0 );
+    }
+
+    /**
+     * Return string from array with semicolon as separator
+     *
+     * @param array $value
+     * @return string
+     */
+    public static function arr2semicStr( array $value ) : string
+    {
+        return implode( self::$SEMIC, $value);
+    }
+
+    /**
+     * @param string $value
+     * @return bool
+     */
+    public static function containsSemic( string $value ) : bool
+    {
+        return ( false !== strpos( $value, self::$SEMIC ));
     }
 
     /**

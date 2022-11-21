@@ -126,8 +126,8 @@ class VcardFormatterUtil implements BaseInterface
     {
         return ( is_string( $string ) &&
             (( false !== strpos( $string, StringUtil::$COLON )) ||
-            ( false !== strpos( $string, StringUtil::$SEMIC )) ||
-            ( false !== strpos( $string, StringUtil::$COMMA ))));
+                StringUtil::containsSemic( $string ) ||
+                ( false !== strpos( $string, StringUtil::$COMMA ))));
     }
 
     /**

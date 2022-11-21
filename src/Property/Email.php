@@ -69,4 +69,13 @@ final class Email extends PropertyBase
     {
         return true;
     }
+
+    /**
+     * @override
+     */
+    public function setValue( $value ) : PropertyInterface
+    {
+        $this->value = self::checkMailtoPrefix( $value, false );
+        return $this;
+    }
 }

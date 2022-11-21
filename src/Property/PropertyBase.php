@@ -27,6 +27,7 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
+use DateTime;
 use InvalidArgumentException;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 
@@ -70,7 +71,7 @@ abstract class PropertyBase implements PropertyInterface
     /**
      * Class constructor
      *
-     * @param null|string|array||DateTime $value
+     * @param null|string|array|DateTime $value
      * @param null|array $parameters
      * @param null|string $valueType
      * @param null|string $group
@@ -106,7 +107,7 @@ abstract class PropertyBase implements PropertyInterface
     /**
      * Class factory method
      *
-     * @param null|string|array||DateTime $value
+     * @param null|string|array|DateTime $value
      * @param null|array $parameters
      * @param null|string $valueType
      * @param null|string $group
@@ -364,6 +365,24 @@ abstract class PropertyBase implements PropertyInterface
         }
         $this->value = trim( $value );
         return $this;
+    }
+
+    /**
+     * If strict, set 'mailto:'-prefix if it is an email-address, otherwise keep as-is (with opt lowercase prefix)
+     *
+     * @param string $value
+     * @param bool $strict
+     * @return string
+     */
+    protected static function checkMailtoPrefix( string $value, bool $strict ) : string
+    {
+        static $MAILTO = 'mailto:';
+        if( 0 === stripos( substr( $value, 0, 7 ), $MAILTO )) {
+            return $MAILTO . substr( $value, 7 );
+        }
+        return ( $strict && ( false !== filter_var( $value, FILTER_VALIDATE_EMAIL )))
+            ? $MAILTO . $value
+            : $value;
     }
 
     /**

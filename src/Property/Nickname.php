@@ -27,9 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use InvalidArgumentException;
-use Kigkonsult\PhpVcardMgr\Util\StringUtil;
-
 /**
  * NICKNAME
  *
@@ -41,7 +38,7 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  * NICKNAME-param = "VALUE=text" / type-param / language-param / altid-param / pid-param / pref-param / any-param
  * NICKNAME-value = text-list
  */
-final class Nickname extends PropertyBase
+final class Nickname extends CatNickBase
 {
     /**
      * @inheritDoc
@@ -81,26 +78,7 @@ final class Nickname extends PropertyBase
      */
     public function setValue( $value ) : PropertyInterface
     {
-        static $ERR = '%s expects string, got \'%s\'' ;
-        switch( true ) {
-            case is_array( $value ) :
-                break;
-            case ( ! is_string( $value )) :
-                throw new InvalidArgumentException(
-                    sprintf(
-                        $ERR,
-                        $this->getPropName(),
-                        var_export( $value, true )
-                    )
-                );
-            case ( false !== strpos( $value, StringUtil::$COMMA )) :
-                $value = explode( StringUtil::$COMMA, $value );
-                break;
-            default :
-                $value = [ $value ];
-                break;
-        }
-        $this->value = self::trimSub( $value );
+        $this->value = self::conformInput( $this->getPropName(), $value );
         return $this;
     }
 }

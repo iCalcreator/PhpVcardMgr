@@ -119,19 +119,19 @@ class DateUtil implements BaseInterface
         $strlen = strlen( $value );
         switch( true ) {
             case (( 5 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ( self::$DS1 === $value[2] ) &&
-                ctype_digit( substr( $value, 3 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::equalDS1( $value, 2 ) &&
+                self::isDigit( $value, 3, 2 )) :
                 // case 4. day  ---DD
                 return $value;
             case (( 4 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 )) :
                 // case 3, month  --MM
                 return $value;
             case (( 6 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 4 )) :
                 // case 3, month and day  --MMDD
                 return substr( $value, 0, 4 ) . self::$DS1 . substr( $value, 4, 2 );
             case (( 8 === $strlen ) && ctype_digit( $value )) :
@@ -140,9 +140,9 @@ class DateUtil implements BaseInterface
                     substr( $value, 4, 2 ) . self::$DS1 .
                     substr( $value, 6, 2 );
             case (( 7 === $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 )) &&
-                ( self::$DS1 === $value[4] ) &&
-                ctype_digit( substr( $value, 5, 2 ))) :
+                self::isDigit( $value, 0, 4 ) &&
+                self::equalDS1( $value, 4 ) &&
+                self::isDigit( $value, 5, 2 )) :
                 // case 2, Y-M
                 return $value;
             case (( 4 === $strlen ) && ctype_digit( $value )) :
@@ -179,8 +179,8 @@ class DateUtil implements BaseInterface
         $zone   = StringUtil::$SP0;
         switch( true ) {
             case (( 4 <= $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 )) :
                 // case 3
                 if( 4 < $strlen ) {
                     $zone = substr( $value, 4 );
@@ -190,12 +190,12 @@ class DateUtil implements BaseInterface
                 }
                 return substr( $value, 0, 4 ) . $zone;
             case (( 3 <= $strlen ) &&
-                ( self::$DS1 === $value[0] ) &&
-                ctype_digit( substr( $value, 1, 2 ))) :
+                self::equalDS1( $value, 0 ) &&
+                self::isDigit( $value, 1, 2 )) :
                 // case 2
                 $output = substr( $value, 0, 3 ); // hour
                 if( 3 < $strlen ) {
-                    if( ctype_digit( substr( $value, 3, 2 ))) {
+                    if( self::isDigit( $value, 3, 2 )) {
                         $output .= StringUtil::$COLON . substr( $value, 3, 2 ); // min
                         $output .= (( 5 < $strlen ) && self::isVcardZone( substr( $value, 5 )))
                             ? self::convertVcard2JcardZone( substr( $value, 5 ))
@@ -206,8 +206,7 @@ class DateUtil implements BaseInterface
                     }
                 }
                 return $output;
-            case (( 6 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 6 ))) :
+            case (( 6 <= $strlen ) && self::isDigit( $value, 0, 6 )) :
                 // case 1, HHMMSS[zone]
                 if( 6 < $strlen ) {
                     $zone = substr( $value, 6 );
@@ -218,8 +217,7 @@ class DateUtil implements BaseInterface
                 return substr( $value, 0, 2 ) . StringUtil::$COLON .
                     substr( $value, 2, 2 ) . StringUtil::$COLON .
                     substr( $value, 4, 2 ) . self::convertVcard2JcardZone( $zone );
-            case (( 4 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 ))) :
+            case (( 4 <= $strlen ) && self::isDigit( $value, 0, 4 )) :
                 // case 1, HHMM[zone]
                 if( 4 < $strlen ) {
                     $zone = substr( $value, 4 );
@@ -229,8 +227,7 @@ class DateUtil implements BaseInterface
                 }
                 return substr( $value, 0, 2 ) . StringUtil::$COLON .
                     substr( $value, 2, 2 ) . self::convertVcard2JcardZone( $zone );
-            case (( 2 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 2 ))) :
+            case (( 2 <= $strlen ) && self::isDigit( $value, 0, 2 )) :
                 // case 1, HH[zone]
                 if( 2 < $strlen ) {
                     $zone = substr( $value, 2 );
@@ -267,9 +264,9 @@ class DateUtil implements BaseInterface
                 return ( self::Zfmt === $value ) ? $value : StringUtil::$SP1 . $value;
             case ( ! in_array( $value[0], [ self::$PLUS, self::$MINUS ], true )) :
                 break;
-            case (( 3 === $strlen ) && ctype_digit( substr( $value, 1, 2 ))) :
+            case (( 3 === $strlen ) && self::isDigit( $value, 1, 2 )) :
                 break;
-            case (( 5 <= $strlen ) && ctype_digit( substr( $value, 1, 4 ))) :
+            case (( 5 <= $strlen ) && self::isDigit( $value, 1, 4 )) :
                 $sHour = substr( $value, 0, 3 );
                 $min   = substr( $value, 3, 2 );
                 $value = $sHour . StringUtil::$COLON . $min;
@@ -373,42 +370,40 @@ class DateUtil implements BaseInterface
         $strlen = strlen( $value );
         switch( true ) {
             case (( 10 === $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 )) &&
-                ( self::$DS1 === $value[4] ) &&
-                ctype_digit( substr( $value, 5, 2 )) &&
-                ( self::$DS1 === $value[7] ) &&
-                ctype_digit( substr( $value, 8, 2 ))) :
+                self::isDigit( $value, 0, 4 ) &&
+                self::equalDS1( $value, 4 ) &&
+                self::isDigit( $value, 5, 2 ) &&
+                self::equalDS1( $value, 7 ) &&
+                self::isDigit( $value, 8, 2 )) :
                 // Y-m-d
                 return substr( $value, 0, 4 ) .
                     substr( $value, 5, 2 ) .
                     substr( $value, 8, 2 );
             case (( 7 === $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 )) &&
-                ( self::$DS1 === $value[4] ) &&
-                ctype_digit( substr( $value, 5, 2 ))) :
+                self::isDigit( $value, 0, 4 ) &&
+                self::equalDS1( $value, 4 ) &&
+                self::isDigit( $value, 5, 2 )) :
                 // Y-m
                 return $value;
             case (( 7 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2, 2 )) &&
-                ( self::$DS1 === $value[4] ) &&
-                ctype_digit( substr( $value, 5, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 ) &&
+                self::equalDS1( $value, 4 ) &&
+                self::isDigit( $value, 5, 2 )) :
                 // --m-d
                 return self::$DS2 . substr( $value, 2, 2 ) . substr( $value, 5, 2 );
-
             case (( 5 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ( self::$DS1 === $value[2] ) &&
-                ctype_digit( substr( $value, 3, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::equalDS1( $value, 2 ) &&
+                self::isDigit( $value, 3, 2 )) :
                 // ---d
                 return $value;
-            case (( 4 === $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 ))) :
+            case (( 4 === $strlen ) && self::isDigit( $value, 0, 4 )) :
                 // Y
                 return substr( $value, 0, 4 );
             case (( 4 === $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 )) :
                 // --m
                 return self::$DS2 . substr( $value, 2, 2 );
         } // end switch
@@ -442,21 +437,20 @@ class DateUtil implements BaseInterface
         $strlen = strlen( $value );
         $zone   = StringUtil::$SP0;
         switch( true ) {
-            case (( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2, 2 ))) :
+            case ( str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 )) :
                 // case 3, sec, opt zone
                 if(( 4 < $strlen ) && self::isJcardZone( substr( $value, 4 ))) {
                     $zone = self::convertJcard2VcardZone( substr( $value, 4 ));
                 }
                 return substr( $value, 0, 4 ) . $zone;
-            case (( self::$DS1 === $value[0] ) &&
-                ctype_digit( substr( $value, 1, 2 ))) :
+            case ( self::equalDS1( $value, 0 ) && self::isDigit( $value, 1, 2 )) :
                 // case 2 min
                 $output = substr( $value, 0, 3 );
                 if( 3 < $strlen ) {
                     if(( StringUtil::$COLON === $value[3] ) &&
                         ( 5 <= $strlen ) &&
-                        ctype_digit( substr( $value, 4, 2 ))) {
+                        self::isDigit( $value, 4, 2 )) {
                         $output .= substr( $value, 4, 2 ); // sec
                         if(( 6 < $strlen ) && self::isJcardZone( substr( $value, 6 ))) {
                             $output .= self::convertJcard2VcardZone( substr( $value, 6 ) );
@@ -467,14 +461,14 @@ class DateUtil implements BaseInterface
                     }
                 }
                 return $output;
-            case ( self::$DS1 === $value[0] ) :
+            case self::equalDS1( $value, 0 ) :
                 break;
             case (( 8 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 2 )) &&
+                self::isDigit( $value, 0, 2 ) &&
                 ( StringUtil::$COLON === $value[2] ) &&
-                ctype_digit( substr( $value, 3, 2 )) &&
+                self::isDigit( $value, 3, 2 ) &&
                 ( StringUtil::$COLON === $value[5] ) &&
-                ctype_digit( substr( $value, 6, 2 ))) :
+                self::isDigit( $value, 6, 2 )) :
                 // case 1, full
                 $output = substr( $value, 0, 2 ) .
                     substr( $value, 3, 2 ) .
@@ -484,9 +478,9 @@ class DateUtil implements BaseInterface
                 }
                 return $output . $zone;
             case (( 5 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 2 )) &&
+                self::isDigit( $value, 0, 2 ) &&
                 ( StringUtil::$COLON === $value[2] ) &&
-                ctype_digit( substr( $value, 3, 2 ))) :
+                self::isDigit( $value, 3, 2 )) :
                 // case 1, hour + min, opt zone
                 $output = substr( $value, 0, 2 ) .
                     substr( $value, 3, 2 );
@@ -494,8 +488,7 @@ class DateUtil implements BaseInterface
                     $output .= self::convertJcard2VcardZone( substr( $value, 5 ));
                 }
                 return $output;
-            case (( 2 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 2 ))) :
+            case (( 2 <= $strlen ) && self::isDigit( $value, 0, 2 )) :
                 // case 1, hour, opt zone
                 $output = substr( $value, 0, 2 );
                 if(( 2 < $strlen ) && self::isJcardZone( substr( $value, 2 ))) {
@@ -528,12 +521,12 @@ class DateUtil implements BaseInterface
                 break;
             case ( ! in_array( $value[0], [ self::$PLUS, self::$MINUS ], true )) :
                 break;
-            case (( 3 === $strlen ) && ctype_digit( substr( $value, 1, 2 ))) :
+            case (( 3 === $strlen ) && self::isDigit( $value, 1, 2 )) :
                 break;
             case (( 5 <= $strlen ) &&
-                ctype_digit( substr( $value, 1, 2 )) &&
+                self::isDigit( $value, 1, 2 ) &&
                 ( StringUtil::$COLON === $value[3] ) &&
-                ctype_digit( substr( $value, 4, 2 ))) :
+                self::isDigit( $value, 4, 2 )) :
                 $output  = substr( $value, 0, 3 );
                 $output .= substr( $value, 4, 2 );
                 $value = $output;
@@ -704,29 +697,29 @@ class DateUtil implements BaseInterface
         $strlen = strlen( $value );
         switch( true ) {
             case (( 5 <= $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ( self::$DS1 === $value[2] ) &&
-                ctype_digit( substr( $value, 3 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::equalDS1( $value, 2 ) &&
+                self::isDigit( $value, 3, 2 )) :
                 // case 4, no year-month but day exists ---DD
                 $day = (int) substr( $value, 3 );
                 return (( 1 <= $day ) && ( $day <= 31 ));
             case (( 4 <= $strlen ) &&
-                ( strpos( $value, self::$DS2 ) === 0 ) &&
-                ctype_digit( substr( $value, 2, 2 ))) :
+                str_starts_with( $value, self::$DS2 ) &&
+                self::isDigit( $value, 2, 2 )) :
                 // case 3, no year but month exists and opt day
                 $value = substr( $value, 2 );
-                $year = 2024;
+                $year  = 2024;
                 break;
             case (( 6 <= $strlen ) &&
-                ctype_digit( substr( $value, 0, 4 )) &&
-                ( self::$DS1 === $value[4] )
-                && ctype_digit( substr( $value, 5 ))) :
+                self::isDigit( $value, 0, 4 ) &&
+                self::equalDS1( $value, 4 ) &&
+                self::isDigit( $value, 5, 2 )) :
                 // case 2, year-month exists but no day
                 $year  = (int) substr( $value, 0,4 );
-                $value = substr( $value, 5 );
+                $value = substr( $value, 5, 2 );
                 break;
             case (( 4 > $strlen ) ||
-                ! ctype_digit( substr( $value, 0, 4 ))) : // odd year
+                ! self::isDigit( $value, 0, 4 )) : // odd year
                 return false;
             default :
                 // case 1, test year
@@ -746,7 +739,7 @@ class DateUtil implements BaseInterface
             return true;
         }
         // day
-        if( ! ctype_digit( substr( $value, 0, 2 ))) {
+        if( ! self::isDigit( $value, 0, 2 )) {
             return false;
         }
         $day = (int) substr( $value, 0, 2 );
@@ -772,13 +765,13 @@ class DateUtil implements BaseInterface
         $value  = trim( $value );
         $strlen = strlen( $value );
         switch( true ) {
-            case (( strpos( $value, self::$DS2 ) === 0 )) :
+            case str_starts_with( $value, self::$DS2 ) :
                 // case 3, sec only, opt zone
                 $hour = $min = $ZERO2;
                 $sec  = substr( $value, 2, 2 );
                 $zone = ( 4 < $strlen ) ? substr( $value, 4 ) : StringUtil::$SP0;
                 break;
-            case ( self::$DS1 === $value[0] ) :
+            case self::equalDS1( $value, 0 ) :
                 // case 2, minute, opt sec/zone
                 $hour = $ZERO2;
                 $min  = substr( $value, 1, 2 );
@@ -843,7 +836,7 @@ class DateUtil implements BaseInterface
     /**
      * Return bool true if value is a minute
      *
-     * @param string value
+     * @param string $value
      * @return bool
      */
     private static function isMinute( string $value ) : bool
@@ -898,10 +891,10 @@ class DateUtil implements BaseInterface
                 return true;
             case ( ! in_array( $value[0], [ self::$PLUS, self::$MINUS ], true )) :
                 return false;
-            case (( 3 === $strlen ) && ctype_digit( substr( $value, 1, 2 ))) :
+            case (( 3 === $strlen ) && self::isDigit( $value, 1, 2 )) :
                 $hour = substr( $value, 1, 2 );
                 return self::isHour( $hour );
-            case (( 5 <= $strlen ) && ctype_digit( substr( $value, 1, 4 ))) :
+            case (( 5 <= $strlen ) && self::isDigit( $value, 1, 4 )) :
                 $hour = substr( $value, 1, 2 );
                 $min  = substr( $value, 3, 2 );
                 return ( self::isHour( $hour ) && self::isMinute( $min ));
@@ -933,13 +926,11 @@ class DateUtil implements BaseInterface
             return false;
         }
         $strlen = strlen( $value );
-        if(( 3 === $strlen ) &&
-            ctype_digit( substr( $value, 1, 2 ))) {
+        if(( 3 === $strlen ) &&  self::isDigit( $value, 1, 2 )) {
             $hour = substr( $value, 1, 2 );
             return self::isHour( $hour );
         }
-        if(( 5 <= $strlen ) &&
-            ctype_digit( substr( $value, 1, 4 ))) {
+        if(( 5 <= $strlen ) && self::isDigit( $value, 1, 4 )) {
             $hour = substr( $value, 1, 2 );
             $min  = substr( $value, 3, 2 );
             return ( self::isHour( $hour ) && self::isMinute( $min ));
@@ -982,12 +973,33 @@ class DateUtil implements BaseInterface
         if( 15 > $strlen ) {
             return false;
         }
-        if( ! ctype_digit( substr( $value, 0, 8 )) ||
+        if( ! self::isDigit( $value, 0, 8 ) ||
             ( self::$T !== $value[8] ) ||
-            ! ctype_digit( substr( $value, 9, 6 )) ||
+            ! self::isDigit( $value, 9, 6 ) ||
             ( false === strtotime( substr( $value, 0, 15 )))) {
             return false;
         }
         return ( 15 === $strlen ) || self::isVcardZone( substr( $value, 15 ));
+    }
+
+    /**
+     * @param string $value
+     * @param int $pos
+     * @return bool
+     */
+    private static function equalDS1( string $value, int $pos ) : bool
+    {
+        return ( self::$DS1 === $value[$pos] );
+    }
+
+    /**
+     * @param string $value
+     * @param int $offset
+     * @param int $length
+     * @return bool
+     */
+    private static function isDigit( string $value, int $offset, int $length ) : bool
+    {
+        return ctype_digit( substr( $value, $offset, $length ));
     }
 }

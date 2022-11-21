@@ -53,9 +53,6 @@ class Vcard4Formatter implements FormatterInterface
                     case self::GENDER :
                         $propRows[] = self::processValueArrSemic( $property );
                         break;
-                    case self::MEMBER :
-                        $propRows[] = self::processMember( $property );
-                        break;
                     case self::ORG :
                         $propRows[] = self::processOrg( $property );
                         break;
@@ -75,6 +72,7 @@ class Vcard4Formatter implements FormatterInterface
                     case self::KIND :        // fall through
                     case self::LANG  :       // fall through
                     case self::LOGO :        // fall through
+                    case self::MEMBER :      // fall through
                     case self::NOTE :        // fall through
                     case self::PHOTO :       // fall through
                     case self::PRODID :      // fall through
@@ -124,29 +122,12 @@ class Vcard4Formatter implements FormatterInterface
     /**
      * @param PropertyInterface $property
      * @return string
-     * @todo more protocols..?
-     */
-    private static function processMember( PropertyInterface $property ) : string
-    {
-        static $MAILTO = 'mailto:';
-        $value = $property->getValue();
-        if( 0 !== stripos( substr( $value, 0, 7 ), $MAILTO ) &&
-            ( false !== filter_var( $value, FILTER_VALIDATE_EMAIL ))) {
-            $value = $MAILTO . $value;
-        }
-        return self::processNameParameters( $property ) .
-            VcardFormatterUtil::strrep( $value );
-    }
-
-    /**
-     * @param PropertyInterface $property
-     * @return string
      */
     private static function processOrg( PropertyInterface $property ) : string
     {
         $value = $property->getValue();
         if( is_array( $value )) {
-            $value = implode( StringUtil::$SEMIC, $value);
+            $value = StringUtil::arr2semicStr( $value );
         }
         return self::processNameParameters( $property ) .
             VcardFormatterUtil::escapeChar( [ StringUtil::$COMMA ], $value );
@@ -181,7 +162,6 @@ class Vcard4Formatter implements FormatterInterface
      */
     private static function processValueArrSemic( PropertyInterface $property ) : string
     {
-        return self::processNameParameters( $property ) .
-            implode( StringUtil::$SEMIC, $property->getValue());
+        return self::processNameParameters( $property ) . StringUtil::arr2semicStr( $property->getValue());
     }
 }

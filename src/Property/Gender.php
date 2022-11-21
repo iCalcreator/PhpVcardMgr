@@ -100,7 +100,7 @@ final class Gender extends PropertyBase
                 break;
             case ! is_string( $value ) :
                 throw new InvalidArgumentException( sprintf( $ERR, var_export( $value, true )));
-            case ( false !== strpos( $value, StringUtil::$SEMIC )) :
+            case StringUtil::containsSemic( $value ) :
                 $value = StringUtil::semicSplit( $value, 2 );
                 break;
             default :

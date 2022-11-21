@@ -29,6 +29,7 @@ namespace Kigkonsult\PhpVcardMgr\Parser;
 
 use Exception;
 use InvalidArgumentException;
+use libXMLError;
 use Kigkonsult\PhpVcardMgr\Util\StringUtil;
 use Kigkonsult\PhpVcardMgr\Vcard;
 use RuntimeException;
@@ -85,6 +86,7 @@ class XcardParser extends XcardParserBase
      * Parse single XML Vcard
      *
      * @return Vcard
+     * @throws Exception
      */
     private function vcardParse() : Vcard
     {
@@ -147,6 +149,12 @@ class XcardParser extends XcardParserBase
     // LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_NSCLEAN;
 
     /**
+     * @var string
+     */
+    private static $CRITICAL = 'critical';
+
+
+    /**
      * Log libxml error
      *
      * @param array $libXarr
@@ -154,10 +162,9 @@ class XcardParser extends XcardParserBase
      */
     private static function checkLibxmlErrors( array $libXarr ) : bool
     {
-        static $CRITICAL = 'critical';
         foreach( $libXarr as $errorSets ) {
             foreach( $errorSets as $logLevel => $msg ) {
-                if( $CRITICAL === $logLevel ) {
+                if( self::$CRITICAL === $logLevel ) {
                     return true;
                 }
             } // end foreach
@@ -180,58 +187,66 @@ class XcardParser extends XcardParserBase
         ? string $content = null
     ) : array
     {
-        static $CRITICAL = 'critical';
-        static $WARNING  = 'warning';
         static $INFO     = 'info';
         static $FMT0     = ' No XML to parse';
         static $FMT1     = ' %s #%d, errCode %s : %s';
         static $FMT2     = ' line: %d col: %d';
         static $FMT3     = '%s%s%s%s^%s';
         static $D        = '-';
-        static $LIBXML_Warning           = 'LIBXML Warning';
-        static $LIBXML_recoverable_Error = 'LIBXML (recoverable) Error';
-        static $LIBXML_Fatal_Error       = 'LIBXML Fatal Error';
         if( empty( $errors )) {
             return [];
         }
         if( empty( $content )) {
             if( empty( $fileName )) {
-                return [ $CRITICAL => $FMT0 ];
+                return [ self::$CRITICAL => $FMT0 ];
             }
             $content = empty( $fileName ) ? StringUtil::$SP0 : (string) @file_get_contents( $fileName );
-        }
+        } // end if
         $xml     = empty( $content ) ? false : explode( PHP_EOL, $content );
         $libXarr = [];
         $baseFileName = empty( $fileName ) ? StringUtil::$SP0 : basename( $fileName );
         foreach( $errors as $ex => $error ) {
-            $str1   = sprintf(
-                $FMT1, $baseFileName, ( $ex + 1 ), $error->code, trim( $error->message )
-            );
-            $str2   = sprintf( $FMT2, $error->line, $error->column );
+            $str1 = sprintf( $FMT1, $baseFileName, ( $ex + 1 ), $error->code, trim( $error->message ));
+            $str2 = sprintf( $FMT2, $error->line, $error->column );
             if( false !== $xml ) {
                 $lineNo = ( 0 < $error->line ) ? ( $error->line - 1 ) : 0;
                 $str2  .= sprintf(
                     $FMT3, PHP_EOL, $xml[$lineNo], PHP_EOL, str_repeat( $D, $error->column ), PHP_EOL
                 );
-            }
-            switch( $error->level ) {
-                case LIBXML_ERR_WARNING:    // 1
-                    $str3     = $LIBXML_Warning;
-                    $logLevel = $WARNING;
-                    break;
-                case LIBXML_ERR_ERROR:      // 2
-                    $str3     = $LIBXML_recoverable_Error;
-                    $logLevel = ( 522 === $error->code ) ? $INFO : $WARNING; // Validation failed: no DTD found !
-                    break;
-                case LIBXML_ERR_FATAL:      // 3
-                default :
-                    $str3     = $LIBXML_Fatal_Error;
-                    $logLevel = $CRITICAL;
-                    break;
-            } // end switch
+            } // end if
+            [ $str3, $logLevel ] = self::evalErrorLevel( $error );
             $libXarr[$ex][$logLevel] = $str3 . $str1;
             $libXarr[$ex][$INFO]     = $str3 . $str2;
         }  // end foreach
         return $libXarr;
+    }
+
+    /**
+     * @param libXMLError $error
+     * @return string[]
+     */
+    private static function evalErrorLevel( libXMLError $error ) : array
+    {
+        static $WARNING  = 'warning';
+        static $INFO     = 'info';
+        static $LIBXML_Warning           = 'LIBXML Warning';
+        static $LIBXML_recoverable_Error = 'LIBXML (recoverable) Error';
+        static $LIBXML_Fatal_Error       = 'LIBXML Fatal Error';
+        switch( $error->level ) {
+            case LIBXML_ERR_WARNING:    // 1
+                $str3     = $LIBXML_Warning;
+                $logLevel = $WARNING;
+                break;
+            case LIBXML_ERR_ERROR:      // 2
+                $str3     = $LIBXML_recoverable_Error;
+                $logLevel = ( 522 === $error->code ) ? $INFO : $WARNING; // Validation failed: no DTD found !
+                break;
+            case LIBXML_ERR_FATAL:      // 3
+            default :
+                $str3     = $LIBXML_Fatal_Error;
+                $logLevel = self::$CRITICAL;
+                break;
+        } // end switch
+        return [ $str3, $logLevel ];
     }
 }

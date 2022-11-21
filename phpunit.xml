@@ -85,7 +85,7 @@ This file is a part of PhpVcardMgr.
     <php>
         <!-- make error_log displays in tests (1) or not (0, remove or comment) -->
         <var name="dispInErrLog" value="0"/>
-        <!-- Number of test V/J/Xcard Faker loads -->
+        <!-- Number of test Faker V/J/Xcard batch loads -->
         <var name="fakerVcardLoads" value="20"/>
     </php>
 </phpunit>

@@ -41,6 +41,11 @@ class XcardPropertyFormatter extends XcardFormatterBase
     private static $INTEGER = 'integer';
 
     /**
+     * @inheritDoc
+     */
+    public function format( array $vCards ) : ? string { return null; }
+
+    /**
      * Write Vcard property to XML
      *
      * @param PropertyInterface $property

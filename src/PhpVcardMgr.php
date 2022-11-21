@@ -44,7 +44,7 @@ final class PhpVcardMgr implements BaseInterface
     /**
      * Constant
      */
-     public const PVM_VERSION ='PhpVcardMgr 1.0.7';
+     public const PVM_VERSION ='PhpVcardMgr 1.0.9';
 
     /**
      * @var Vcard[]
@@ -79,7 +79,7 @@ final class PhpVcardMgr implements BaseInterface
      * @param null|FormatterInterface $formatter  default Vcard4Formatter
      * @return string
      */
-    public function format( ? FormatterInterface $formatter = null ) : string
+    public function format( ? FormatterInterface $formatter = null ) : ? string
     {
         if( null === $formatter ) {
             $formatter = new Vcard4Formatter();

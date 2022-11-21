@@ -81,7 +81,7 @@ final class ClientPidMap extends PropertyBase
     public function setValue( $value, ? string $uri = null ) : PropertyInterface
     {
         static $ERR = 'ClientPidMap expect (int) pid and (string) uri, got pid %s and uri %s';
-        if( is_string( $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) {
+        if( is_string( $value ) && StringUtil::containsSemic( $value )) {
             [ $value, $uri ] = StringUtil::semicSplit( $value, 2 );
         }
         elseif( is_array( $value )) {

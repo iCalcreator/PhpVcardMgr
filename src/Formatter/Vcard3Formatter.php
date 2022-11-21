@@ -174,9 +174,9 @@ class Vcard3Formatter implements FormatterInterface
      */
     private static function processDate( PropertyInterface $property ) : string
     {
+        $propName   = $property->getPropName();
         $valueType  = $property->getValueType();
         $parameters = $property->getParameters();
-        $propName   = $property->getPropName();
         if(( self::BDAY === $propName ) && ( self::DATE !== $valueType )) {
             $parameters[self::VALUE] = self::DATETIME;
         }
@@ -205,7 +205,7 @@ class Vcard3Formatter implements FormatterInterface
     {
         static $GEOprefix = 'geo:';
         $value = $property->getValue();
-        if( false !== strpos( $value, StringUtil::$SEMIC )) {
+        if( StringUtil::containsSemic( $value )) {
             $value = StringUtil::before( StringUtil::$SEMIC, $value );
         }
         if( 0 === strpos( $value, $GEOprefix )) {
@@ -266,7 +266,7 @@ class Vcard3Formatter implements FormatterInterface
     {
         $value = $property->getValue();
         if( is_array( $value )) {
-            $value = implode( StringUtil::$SEMIC, $value);
+            $value = StringUtil::arr2semicStr( $value );
         }
         return self::processNameParameters( $property ) .
             VcardFormatterUtil::escapeChar( [ StringUtil::$COMMA ], $value );
@@ -327,9 +327,6 @@ class Vcard3Formatter implements FormatterInterface
         if( ! $property->hasTypeParameter()) { // default text
             $property->addParameter( self::TYPE, self::TEXT );
         }
-        elseif( self::URI === $orgType ) {
-            $property->addParameter( self::TYPE, self::URI );
-        }
         $value = $property->getValue();
         return self::processNameParameters( $property ) .
             (
@@ -355,8 +352,7 @@ class Vcard3Formatter implements FormatterInterface
      */
     private static function processValueArrSemic( PropertyInterface $property ) : string
     {
-        return self::processNameParameters( $property ) .
-            implode( StringUtil::$SEMIC, $property->getValue());
+        return self::processNameParameters( $property ) . StringUtil::arr2semicStr( $property->getValue());
     }
 
     /**
@@ -372,7 +368,7 @@ class Vcard3Formatter implements FormatterInterface
         $propName = $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName;
         $value    = $property->getValue();
         if( is_array( $value )) {
-            $value = implode( StringUtil::$SEMIC, $value );
+            $value = StringUtil::arr2semicStr( $value );
         }
         elseif( self::TEXT === $property->getValueType()) {
             $value = VcardFormatterUtil::strrep( $value );
@@ -398,7 +394,7 @@ class Vcard3Formatter implements FormatterInterface
         $propName = $property->isGroupSet() ? $property->getGroup() . StringUtil::$DOT . $propName : $propName;
         $value    = $property->getValue();
         $value =  is_array( $value )
-            ? implode( StringUtil::$SEMIC, $value )
+            ? StringUtil::arr2semicStr( $value )
             : VcardFormatterUtil::strrep( $value);
         return $propName .
             VcardFormatterUtil::createParams(

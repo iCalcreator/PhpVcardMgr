@@ -85,4 +85,13 @@ final class CalAdrUri extends PropertyBase
     {
         return $default ? self::URI : [ self::URI ];
     }
+
+    /**
+     * @override
+     */
+    public function setValue( $value ) : PropertyInterface
+    {
+        $this->value = self::checkMailtoPrefix( $value, true );
+        return $this;
+    }
 }

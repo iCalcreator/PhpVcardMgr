@@ -221,7 +221,7 @@ class Vcard3Parser extends VcardParserBase
     private static function processGeo( PropertyInterface $property, string $value ) : void
     {
         static $GEOprefix = 'geo:';
-        if( false !== strpos( $value, StringUtil::$SEMIC )) {
+        if( StringUtil::containsSemic( $value )) {
             $value = $GEOprefix . implode( StringUtil::$COMMA, explode( StringUtil::$SEMIC, $value ));
         }
         $property->setValue( $value );
@@ -346,12 +346,28 @@ class Vcard3Parser extends VcardParserBase
             default :
                 break;
         } // end switch
+        return self::otherXprop( $property, $propName, $value );
+    }
+
+    /**
+     * @param PropertyInterface $property
+     * @param string $propName
+     * @param string $value
+     * @return PropertyInterface
+     */
+    private static function otherXprop(
+        PropertyInterface $property,
+        string $propName,
+        string $value
+    ) : PropertyInterface
+    {
         $property->setPropName( $propName );
-        $valueType = ( $property->hasValueParameter() &&
-            in_array( $property->getParameters( self::VALUE ), Xprop::getAcceptedValueTypes(), true ))
-            ? $property->getParameters( self::VALUE )
-            : self::TEXT;
-        $property->setValueType( $valueType );
+        $property->setValueType(
+            ( $property->hasValueParameter() &&
+                in_array( $property->getParameters( self::VALUE ), Xprop::getAcceptedValueTypes(), true ))
+                ? $property->getParameters( self::VALUE )
+                : self::TEXT
+        );
         if( ! Xprop::isAnyParameterAllowed()) {
             $allowedPkeys = Xprop::getAcceptedParameterKeys();
             foreach( $property->getParameters() as $pKey => $pValue ) {

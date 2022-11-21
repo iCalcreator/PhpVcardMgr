@@ -108,6 +108,8 @@ $outputString = $phpVcardMgr->vCard4Format();
 
 For details, please explore Vcard4 [rfc6350], Vcard3 [rfc2426], Jcard [rfc7095], Xcard [rfc6351] or [PhpVcardMgr], [Vcard], or [Properties] docs.
 
+To support the development, maintenance and test process
+[PHPCompatibility], [PHPStan] and [php-arguments-detector] are included.
 
 ###### Support
 
@@ -145,6 +147,9 @@ PhpVcardMgr is licensed under the LGPLv3 License.
 
 [github.com/PhpVcardMgr]:https://github.com/iCalcreator/phpvcardmgr/issues
 [paypal.me/kigkonsult]:https://paypal.me/kigkonsult
+[php-arguments-detector]:https://github.com/DeGraciaMathieu/php-arguments-detector
+[PHPCompatibility]:https://github.com/PHPCompatibility/PHPCompatibility
+[PHPStan]:https://github.com/phpstan/phpstan
 [PhpVcardMgr]:docs/PhpVcardMgr.md
 [Properties]:docs/Properties.md
 [rfc2426]:https://www.rfc-editor.org/rfc/rfc2426.html

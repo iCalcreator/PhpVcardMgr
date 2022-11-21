@@ -6,3 +6,6 @@
 1.0.5 XcardParser::parse() DomNode export removed
 1.0.6 Vcard Property class structure rebuild
 1.0.7 Format classes structure/logic rebuild
+
+1.0.8 Member/CalAdrUri with 'mailto:'-prefix if email
+1.0.9 Email opt 'mailto:'-prefix upd

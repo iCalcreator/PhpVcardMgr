@@ -73,7 +73,7 @@ abstract class XcardFormatterBase implements FormatterInterface
     /**
      * @inheritDoc
      */
-    public function format( array $vCards ) : ? string {}
+    abstract public function format( array $vCards ) : ? string;
 
     /**
      * Set writer start element, incl opt XML-attributes

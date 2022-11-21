@@ -84,11 +84,7 @@ final class Member extends PropertyBase
      */
     public function setValue( $value ) : PropertyInterface
     {
-        static $MAILTO = 'mailto:';
-        if( 0 === stripos( substr( $value, 0, 7 ), $MAILTO )) {
-            $value = substr( $value, 7 );
-        }
-        $this->value = $value;
+        $this->value = self::checkMailtoPrefix( $value, true );
         return $this;
     }
 }

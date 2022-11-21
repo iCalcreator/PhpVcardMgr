@@ -27,9 +27,6 @@
 declare( strict_types = 1 );
 namespace Kigkonsult\PhpVcardMgr\Property;
 
-use InvalidArgumentException;
-use Kigkonsult\PhpVcardMgr\Util\StringUtil;
-
 /**
  * N
  *
@@ -43,7 +40,7 @@ use Kigkonsult\PhpVcardMgr\Util\StringUtil;
  * Family Names (also known as surnames), Given Names, Additional Names, Honorific Prefixes, and Honorific Suffixes.
  * Individual text components can include multiple text values separated by the COMMA character (U+002C).
  */
-final class N extends PropertyBase
+final class N extends AdrNbase
 {
     /**
      * The structured property value
@@ -108,32 +105,16 @@ final class N extends PropertyBase
         ? string $nameSuffixes = null
     ) : PropertyInterface
     {
-        static $ERR = 'N expects surname/given/additional/prefix/suffix, got ' ;
-        switch( true ) {
-            case ( is_string( $value ) && ( false !== strpos( $value, StringUtil::$SEMIC ))) :
-                $value = explode( StringUtil::$SEMIC, $value );
-                // fall through
-            case is_array( $value ) :
-                $arrCnt = count( $value );
-                switch( true ) {
-                    case ( 5 === $arrCnt ) :
-                        break;
-                    case ( 5 > $arrCnt ) :
-                        $value = array_pad( $value, 5, StringUtil::$SP0 );
-                        break;
-                    default :
-                        throw new InvalidArgumentException( $ERR . var_export( $value, true ));
-                } // end switch
-                break;
-            default :
-                $value = [ $value, $givenNames, $additionalNames, $namePrefixes, $nameSuffixes ];
-                break;
-        } // end switch
-        $value = self::trimSub( $value );
-        if( empty( implode( $value ))) {
-            throw new InvalidArgumentException( $ERR . var_export( $value, true ));
-        }
-        $this->value = $value;
+        $this->value = self::conformInput( 5,  $value, $givenNames, $additionalNames, $namePrefixes, $nameSuffixes );
         return $this;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    protected static function getERRstr( $value ) : string
+    {
+        static $ERR = 'N expects surname/given/additional/prefix/suffix, got ' ;
+        return $ERR . var_export( $value, true );
     }
 }

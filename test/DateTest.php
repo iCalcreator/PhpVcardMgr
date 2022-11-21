@@ -277,22 +277,25 @@ class DateTest extends TestCase implements BaseInterface
      */
     public function dataProvider() : array
     {
-        $counter = 0;
         $output  = [];
+        $counter = 100;
         foreach( $this->dateProvider() as $dataSet ) {
-            $dataSet[0] = $counter++ . '-' . $dataSet[0];
+            $dataSet[0] = ++$counter . '-' . $dataSet[0];
             $output[]   = $dataSet;
         }
+        $counter = 200;
         foreach( $this->timeProvider() as $dataSet ) {
-            $dataSet[0] = $counter++ . '-' . $dataSet[0];
+            $dataSet[0] = ++$counter . '-' . $dataSet[0];
             $output[]   = $dataSet;
         }
+        $counter = 300;
         foreach( $this->dateTimeProvider() as $dataSet ) {
-            $dataSet[0] = $counter++ . '-' . $dataSet[0];
+            $dataSet[0] = ++$counter . '-' . $dataSet[0];
             $output[]   = $dataSet;
         }
+        $counter = 400;
         foreach( $this->timestampProvider() as $dataSet ) {
-            $dataSet[0] = $counter++ . '-' . $dataSet[0];
+            $dataSet[0] = ++$counter . '-' . $dataSet[0];
             $output[]   = $dataSet;
         }
         return $output;

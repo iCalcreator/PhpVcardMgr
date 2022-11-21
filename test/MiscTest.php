@@ -121,6 +121,8 @@ END:VCARD
     /**
      * Tests VcardFormatterUtil::size75()
      *
+     * Same as in iCalcreator StringfuncTest for StringFactory::size75()
+     *
      * @test
      */
     public function utf8Test() : void
